@@ -182,41 +182,7 @@ wp i18n make-json lang/ --no-purge
 - Verify the BNF catalogue URL is accessible
 - Check that the image URL pattern matches: `https://catalogue.bnf.fr/couverture`
 - Ensure WordPress media library has write permissions
-
-## Changelog
-
-### 1.0.1
-
-- Improved error handling
-- Enhanced code documentation
-- Added type hints and PHPStan support
-- Fixed field rendering issues
-
-### 1.0.0
-
-- Initial release
-- Barcode scanner field type
-- BNF integration
-- Cover image fetching
-
-## License
-
-GPLv2 or later
-
-Copyright (c) 2024 LaTableRouge
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-## Author
-
-**LaTableRouge**
-
-- Website: [https://mlnop.fr](https://mlnop.fr)
-- Plugin URI: [https://github.com/LaTableRouge/acf-barcodescanner](https://github.com/LaTableRouge/acf-barcodescanner)
-
+- 
 ## Support
 
 For issues, feature requests, or contributions, please open an issue on the [GitHub repository](https://github.com/LaTableRouge/acf-barcodescanner).
@@ -224,5 +190,6 @@ For issues, feature requests, or contributions, please open an issue on the [Git
 ## Credits
 
 - Built with [Advanced Custom Fields](https://www.advancedcustomfields.com/)
+- Uses [barcode-detection-api-demo](https://github.com/tony-xlh/barcode-detection-api-demo/blob/main/scanner.js)
 - Uses [SweetAlert2](https://sweetalert2.github.io/) for UI components
 - Integrates with [Bibliothèque nationale de France](https://www.bnf.fr/) catalogue
