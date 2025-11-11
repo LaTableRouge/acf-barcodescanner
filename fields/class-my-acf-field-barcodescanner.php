@@ -232,9 +232,9 @@ class BarcodeScannerField extends \acf_field {
         <div class="acfbcs__field-wrapper">
             <button 
                 class="field-wrapper__button button button-primary js-open-popup"
-                title="<?php _e('Scanner', 'acf-barcodescanner'); ?>"
+                title="<?php _e('Scan', 'acf-barcodescanner'); ?>"
             >
-                <span><?php _e('Scanner', 'acf-barcodescanner'); ?></span>
+                <span><?php _e('Scan', 'acf-barcodescanner'); ?></span>
                 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
                     <path d="M0 64h64v320h-64zM96 64h32v320h-32zM160 64h32v320h-32zM256 64h32v320h-32zM384 64h32v320h-32zM480 64h32v320h-32zM320 64h16v320h-16zM224 64h16v320h-16zM432 64h16v320h-16zM0 416h32v32h-32zM96 416h32v32h-32zM160 416h32v32h-32zM320 416h32v32h-32zM480 416h32v32h-32zM384 416h64v32h-64zM224 416h64v32h-64z"></path>
                 </svg>
