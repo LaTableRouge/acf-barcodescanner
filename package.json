@@ -1,0 +1,152 @@
+{
+	"name": "acf-barcode-scanner",
+	"version": "1.0.0",
+	"description": "A plugin add a barcode scanner to acf",
+	"main": "index.js",
+	"keywords": [
+		"barcode",
+		"scanner",
+		"barcode scanner"
+	],
+	"author": "LaTableRouge",
+	"license": "GNU GENERAL PUBLIC LICENSE",
+	"repository": {
+		"url": "TODO"
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"watch": "wp-scripts start",
+		"build": "wp-scripts build",
+		"lint:scss": "npx stylelint --config linters/stylelint.config.js --ignore-path linters/.stylelintignore --allow-empty-input --fix {src/styles/**,src/styles}*.scss",
+		"prettier:scss": "npx prettier --config linters/prettier.config.js --ignore-path linters/.prettierignore --no-error-on-unmatched-pattern --write {src/styles/**,src/styles}/*.scss",
+		"lint:js": "npx eslint --config linters/eslint.config.js --no-error-on-unmatched-pattern --fix {src/scripts/**,src/scripts}/*.{js,jsx}",
+		"prettier:js": "npx prettier --config linters/prettier.config.js --ignore-path linters/.prettierignore --no-error-on-unmatched-pattern --write {src/scripts/**,src/scripts}/*.{js,jsx}",
+		"prettier:json": "npx prettier --config linters/prettier.config.js --ignore-path linters/.prettierignore --no-error-on-unmatched-pattern --write {composer.json,package.json,src/**/*.json}",
+		"lint:md": "npx markdownlint-cli2 --config linters/.markdownlint.json --fix */**/*.md !**/node_modules/** !**/vendor/**",
+		"lint:php": "composer run lint:php",
+		"prettier:php": "composer run prettier:php",
+		"beautify:all": "npm run prettier:scss && npm run lint:scss && npm run prettier:js && npm run lint:js && npm run lint:md && npm run prettier:json && npm run lint:md && npm run prettier:php && npm run lint:php",
+		"prepare": "husky"
+	},
+	"devDependencies": {
+		"validate-branch-name": "^1.3.2",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.2.6",
+		"git-precommit-checks": "^3.1.0",
+		"eruda": "^3.4.3",
+		"@babel/runtime": "^7.28.4",
+		"@wordpress/scripts": "^30.27.0",
+		"autoprefixer": "^10.4.22",
+		"browserslist": "^4.28.0",
+		"eslint": "^9.39.1",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-import": "^2.32.0",
+		"eslint-plugin-n": "^17.23.1",
+		"eslint-plugin-node": "^11.1.0",
+		"eslint-plugin-prettier": "^5.5.4",
+		"eslint-plugin-promise": "^7.2.1",
+		"eslint-plugin-react": "^7.37.5",
+		"eslint-plugin-simple-import-sort": "^12.1.1",
+		"eslint-plugin-sort-destructure-keys": "^2.0.0",
+		"eslint-plugin-unused-imports": "^4.3.0",
+		"eslint-plugin-yml": "^1.19.0",
+		"globals": "^16.5.0",
+		"markdownlint-cli2": "^0.18.1",
+		"prettier": "^3.6.2",
+		"sass": "^1.94.0",
+		"sass-loader": "^16.0.6",
+		"stylelint": "^16.25.0",
+		"stylelint-config-property-sort-order-smacss": "^10.0.0",
+		"stylelint-config-sass-guidelines": "^12.1.0",
+		"stylelint-config-standard": "^39.0.1",
+		"stylelint-order": "^7.0.0"
+	},
+	"dependencies": {
+		"sweetalert2": "^11.26.3"
+	},
+	"files": [],
+	"lint-staged": {
+		"**/*.md": [
+			"npx prettier --config linters/prettier.config.js --ignore-path linters/.prettierignore --no-error-on-unmatched-pattern --write",
+			"npx markdownlint-cli2 --config linters/.markdownlint.json --fix"
+		],
+		"**/*.{yml,yaml}": [
+			"npx prettier --config linters/prettier.config.js --ignore-path linters/.prettierignore --no-error-on-unmatched-pattern --write"
+		],
+		"**/*.json": [
+			"npx prettier --config linters/prettier.config.js --ignore-path linters/.prettierignore --no-error-on-unmatched-pattern --write"
+		],
+		"**/*.php": [
+			"composer lint-staged:php"
+		],
+		"**/*.scss": [
+			"npx stylelint --config linters/stylelint.config.js --ignore-path linters/.stylelintignore --allow-empty-input --fix",
+			"npx prettier --config linters/prettier.config.js --ignore-path linters/.prettierignore --no-error-on-unmatched-pattern --write",
+			"npx stylelint --config linters/stylelint.config.js --ignore-path linters/.stylelintignore --allow-empty-input --fix"
+		],
+		"**/*.{mjs,js,jsx,ts,tsx}": [
+			"npx prettier --config linters/prettier.config.js --ignore-path linters/.prettierignore --no-error-on-unmatched-pattern --write",
+			"npx eslint --config linters/eslint.config.js --no-error-on-unmatched-pattern --fix"
+		]
+	},
+	"validate-branch-name": {
+		"pattern": "^(main|master|srv/dev|srv/pre)$|^(feature|fix|hotfix|experimental|minor|major|release)/.+$",
+		"errorMsg": "🤨 The branch you're trying to push doesn't respect our conventions, you can rename it with `git branch -m <current-name> <new-name>`"
+	},
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		],
+		"rules": {
+			"type-enum": [
+				2,
+				"always",
+				[
+					"build",
+					"chore",
+					"docs",
+					"feat",
+					"fix",
+					"refactor",
+					"revert",
+					"style",
+					"wordpress",
+					"wp"
+				]
+			]
+		}
+	},
+	"git-precommit-checks": {
+		"display": {
+			"notifications": true,
+			"offendingContent": true,
+			"rulesSummary": false,
+			"shortStats": true,
+			"verbose": false
+		},
+		"rules": [
+			{
+				"message": "Have you forgotten to finish some tasks?",
+				"nonBlocking": true,
+				"regex": "/(?:FIXME|TODO)/"
+			},
+			{
+				"message": "You have conflict markers lying around",
+				"regex": "/^[<>|=]{4,}/m"
+			},
+			{
+				"message": "Commit stopped: you've entered information that must not be committed!",
+				"regex": "/do not commit/i"
+			},
+			{
+				"filter": "/\\.js$/",
+				"message": "🤔 Hum! Didn't you forget to remove from \"console.log(...)\"?",
+				"nonBlocking": true,
+				"regex": "/^\\s*console\\.log/"
+			}
+		]
+	},
+	"browserslist": [
+		"last 2 version"
+	]
+}
