@@ -1,17 +1,20 @@
 {
 	"name": "acf-barcode-scanner",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "A plugin add a barcode scanner to acf",
 	"main": "index.js",
 	"keywords": [
 		"barcode",
 		"scanner",
-		"barcode scanner"
+		"barcode scanner",
+		"acf",
+		"advanced custom fields"
 	],
 	"author": "LaTableRouge",
-	"license": "GNU GENERAL PUBLIC LICENSE",
+	"license": "GPLv3 or later",
 	"repository": {
-		"url": "TODO"
+		"type": "git",
+		"url": "https://github.com/LaTableRouge/acf-barcodescanner.git"
 	},
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",

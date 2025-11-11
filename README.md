@@ -37,7 +37,7 @@ Perfect for libraries, bookstores, or any WordPress site that needs to catalog i
 
    ```bash
    cd wp-content/plugins
-   git clone [repository-url] acf-barcodescanner
+   git clone https://github.com/LaTableRouge/acf-barcodescanner.git acf-barcodescanner
    ```
 
 2. Navigate to the plugin directory:
@@ -103,14 +103,7 @@ acf-barcodescanner/
 │   └── class-my-acf-field-barcodescanner.php  # Main field class
 ├── src/
 │   ├── scripts/                               # JavaScript source files
-│   │   ├── components/
-│   │   │   ├── barcode-scanner.js
-│   │   │   ├── books-fields-filler.js
-│   │   │   └── cover-fetch.js
-│   │   └── common/
-│   │       └── variables.js
 │   └── styles/                                # SCSS source files
-│       └── index.scss
 ├── build/                                     # Compiled assets (generated)
 ├── lang/                                      # Translation files
 ├── linters/                                   # Linting configurations
@@ -155,25 +148,19 @@ The project uses:
 
 ## Customization
 
-### JavaScript Localization
+### Translation (i18n)
 
-The plugin exposes a global object `acfbcs_params` with:
+**Generate .pot file (from the plugin's directory):**
 
-- `ajax_url`: WordPress AJAX URL
-
-Example usage:
-
-```javascript
-const ajaxUrl = acfbcs_params.ajax_url;
+```bash
+wp i18n make-pot . lang/acf-barcodescanner.pot --domain=acf-barcodescanner --exclude=node_modules,vendor,lang,build --include=*.php
 ```
 
-### Translation
+**Generate JSON translation files for JavaScript (from the plugin's directory):**
 
-The plugin is translation-ready. To add translations:
-
-1. Create translation files in the `lang/` directory
-2. Use the text domain: `acf-barcodescanner`
-3. All user-facing strings are translatable
+```bash
+wp i18n make-json lang/ --no-purge
+```
 
 ## Troubleshooting
 
@@ -228,11 +215,11 @@ the Free Software Foundation; either version 2 of the License, or
 **LaTableRouge**
 
 - Website: [https://mlnop.fr](https://mlnop.fr)
-- Plugin URI: PLUGIN_URL
+- Plugin URI: [https://github.com/LaTableRouge/acf-barcodescanner](https://github.com/LaTableRouge/acf-barcodescanner)
 
 ## Support
 
-For issues, feature requests, or contributions, please open an issue on the repository.
+For issues, feature requests, or contributions, please open an issue on the [GitHub repository](https://github.com/LaTableRouge/acf-barcodescanner).
 
 ## Credits
 

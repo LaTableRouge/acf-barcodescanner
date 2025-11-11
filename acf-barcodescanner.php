@@ -2,7 +2,7 @@
 
 /*
 Plugin Name: Advanced Custom Fields: Barcode scanner
-Plugin URI: PLUGIN_URL
+Plugin URI: https://github.com/LaTableRouge/acf-barcodescanner
 Description: Add Barcode scanner
 Version: 1.0.1
 Author: Author: LaTableRouge
