@@ -6,58 +6,95 @@ msgstr ""
 "1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/acf-"
 "barcodescanner\n"
-"POT-Creation-Date: 2024-10-14T11:16:34+00:00\n"
-"PO-Revision-Date: 2024-10-14 13:17+0200\n"
+"POT-Creation-Date: 2025-11-11T11:24:46+00:00\n"
+"PO-Revision-Date: 2025-11-11 12:25+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.5\n"
+"X-Generator: Poedit 3.8\n"
 "X-Domain: acf-barcodescanner\n"
 
 #. Plugin Name of the plugin
+#: acf-barcodescanner.php
 msgid "Advanced Custom Fields: Barcode scanner"
 msgstr "Advanced Custom Fields : Scanneur de code barre"
 
 #. Plugin URI of the plugin
-msgid "PLUGIN_URL"
-msgstr "PLUGIN_URL"
+#: acf-barcodescanner.php
+msgid "https://github.com/LaTableRouge/acf-barcodescanner"
+msgstr "https://github.com/LaTableRouge/acf-barcodescanner"
 
 #. Description of the plugin
+#: acf-barcodescanner.php
 msgid "Add Barcode scanner"
 msgstr "Ajouter le scanneur de code barre"
 
 #. Author of the plugin
+#: acf-barcodescanner.php
 msgid "Author: LaTableRouge"
 msgstr "Auteur : LaTableRouge"
 
 #. Author URI of the plugin
+#: acf-barcodescanner.php
 msgid "https://mlnop.fr"
 msgstr "https://mlnop.fr"
 
-#: fields/class-my-acf-field-barcodescanner.php:36
+#: fields/class-my-acf-field-barcodescanner.php:52
 msgid "Barcode scanner"
 msgstr "Scanneur de code barre"
 
-#: fields/class-my-acf-field-barcodescanner.php:139
-#: fields/class-my-acf-field-barcodescanner.php:141
-msgid "Scanner"
+#: fields/class-my-acf-field-barcodescanner.php:83
+#: fields/class-my-acf-field-barcodescanner.php:137
+msgid "Invalid URL parameter"
+msgstr "Paramètre URL invalide"
+
+#: fields/class-my-acf-field-barcodescanner.php:88
+#: fields/class-my-acf-field-barcodescanner.php:142
+msgid "Invalid or empty URL"
+msgstr "URL invalide ou vide"
+
+#: fields/class-my-acf-field-barcodescanner.php:94
+msgid "Failed to initialize cURL"
+msgstr "Échec de l'initialisation de cURL"
+
+#: fields/class-my-acf-field-barcodescanner.php:112
+#, php-format
+msgid "CURL Error: %s"
+msgstr "Erreur CURL : %s"
+
+#: fields/class-my-acf-field-barcodescanner.php:116
+#, php-format
+msgid "HTTP Error: %s"
+msgstr "Erreur HTTP : %s"
+
+#: fields/class-my-acf-field-barcodescanner.php:152
+msgid "Failed to load URL"
+msgstr "Échec du chargement de l'URL"
+
+#: fields/class-my-acf-field-barcodescanner.php:188
+#, php-format
+msgid "Error uploading image: %s"
+msgstr "Erreur lors du téléchargement de l'image : %s"
+
+#: fields/class-my-acf-field-barcodescanner.php:235
+#: fields/class-my-acf-field-barcodescanner.php:237
+msgid "Scan"
 msgstr "Scanner"
 
-#: build/index.js:1
-msgid "Tracklist:"
-msgstr "Liste des chansons :"
+#~ msgid "PLUGIN_URL"
+#~ msgstr "PLUGIN_URL"
 
-#: build/index.js:1
-msgid "Scannez un code barre"
-msgstr "Scanner un code barre"
+#~ msgid "Tracklist:"
+#~ msgstr "Liste des chansons :"
 
-#: build/index.js:1
-msgid "Récupérer les données"
-msgstr "Récupérer les données"
+#~ msgid "Scannez un code barre"
+#~ msgstr "Scanner un code barre"
 
-#: build/index.js:1
-msgid "Start Scan"
-msgstr "Commencer le scan"
+#~ msgid "Récupérer les données"
+#~ msgstr "Récupérer les données"
+
+#~ msgid "Start Scan"
+#~ msgstr "Commencer le scan"
