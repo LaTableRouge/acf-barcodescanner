@@ -1,6 +1,8 @@
 # Advanced Custom Fields: Barcode Scanner
 
-A WordPress plugin that adds a barcode scanner field type to Advanced Custom Fields (ACF), allowing users to scan barcodes and automatically fetch related data, particularly useful for book cataloging with BNF (Bibliothèque nationale de France) integration.
+A WordPress plugin that adds a barcode scanner field type to Advanced Custom Fields (ACF),
+allowing users to scan barcodes and automatically fetch related data,
+particularly useful for book cataloging with BNF (Bibliothèque nationale de France) integration.
 
 ## Description
 
@@ -12,6 +14,8 @@ This plugin extends ACF by adding a custom field type that enables barcode scann
 - Fill ACF fields with book information
 
 Perfect for libraries, bookstores, or any WordPress site that needs to catalog items by barcode.
+
+> **Note:** This plugin is primarily developed for my personal use and personal use case. However, you are welcome to fork it and adapt it to your own needs!
 
 ## Features
 
@@ -182,7 +186,8 @@ wp i18n make-json lang/ --no-purge
 - Verify the BNF catalogue URL is accessible
 - Check that the image URL pattern matches: `https://catalogue.bnf.fr/couverture`
 - Ensure WordPress media library has write permissions
-- 
+-
+
 ## Support
 
 For issues, feature requests, or contributions, please open an issue on the [GitHub repository](https://github.com/LaTableRouge/acf-barcodescanner).
