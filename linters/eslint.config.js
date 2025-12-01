@@ -16,6 +16,7 @@ module.exports = defineConfig([
 			sourceType: 'module',
 			globals: {
 				wp: true,
+				acf: true,
 				acfbcs_params: true,
 				jQuery: true,
 				...globals.browser,

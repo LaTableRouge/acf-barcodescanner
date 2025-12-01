@@ -5,9 +5,9 @@ import { __ } from '@wordpress/i18n'
 import Swal from 'sweetalert2'
 
 import { barcodeScanner } from './scripts/components/barcode-scanner'
-import { booksFieldsFiller } from './scripts/components/books-fields-filler'
-import { cdsFieldsFiller } from './scripts/components/cds-fields-filler'
-import { dvdsFieldsFiller } from './scripts/components/dvds-fields-filler'
+import { booksFieldsFiller } from './scripts/components/books/filler'
+import { cdsFieldsFiller } from './scripts/components/cds/filler'
+import { dvdsFieldsFiller } from './scripts/components/dvds/filler'
 import { mediasfetch } from './scripts/components/medias-fetch'
 
 // Mobile debug helper
@@ -20,37 +20,37 @@ import { mediasfetch } from './scripts/components/medias-fetch'
 // })
 
 function initField($field) {
-  const field = $field[0]
-  if (field) {
-    const postType = field.dataset.name.split('_')[0]
-    const mainWrapper = field.closest('form#post')
+	const field = $field[0]
+	if (field) {
+		const postType = field.dataset.name.split('_')[0]
+		const mainWrapper = field.closest('form#post')
 
-    const button = field.querySelector('.js-open-popup')
-    if (button) {
-      button.addEventListener('click', async (e) => {
-        e.preventDefault()
-        // const fetchedDatas = await booksfetch('0724387383814', 'dvds')
-        // console.log(fetchedDatas)
-        // dvdsFieldsFiller(mainWrapper, fetchedDatas)
+		const button = field.querySelector('.js-open-popup')
+		if (button) {
+			button.addEventListener('click', async (e) => {
+				e.preventDefault()
+				// const fetchedDatas = await booksfetch('0724387383814', 'dvds')
+				// console.log(fetchedDatas)
+				// dvdsFieldsFiller(mainWrapper, fetchedDatas)
 
-        Swal.fire({
-          title: __('Scannez un code barre', 'acf-barcodescanner'),
-          allowOutsideClick: false,
-          showCloseButton: true,
-          showCancelButton: false,
-          input: 'text',
-          inputAttributes: {
-            autocapitalize: 'off',
-            autocomplete: 'off'
-          },
-          customClass: {
-            popup: 'acfbcs__popup'
-          },
-          confirmButtonText: __('Récupérer les données', 'acf-barcodescanner'),
-          didOpen: (wrapper) => {
-            barcodeScanner(wrapper)
-          },
-          html: /* html */ `
+				Swal.fire({
+					title: __('Scannez un code barre', 'acf-barcodescanner'),
+					allowOutsideClick: false,
+					showCloseButton: true,
+					showCancelButton: false,
+					input: 'text',
+					inputAttributes: {
+						autocapitalize: 'off',
+						autocomplete: 'off'
+					},
+					customClass: {
+						popup: 'acfbcs__popup'
+					},
+					confirmButtonText: __('Récupérer les données', 'acf-barcodescanner'),
+					didOpen: (wrapper) => {
+						barcodeScanner(wrapper)
+					},
+					html: /* html */ `
             <div class="acfbcs__scanner-wrapper">
               <div class="scanner-wrapper__choices">
                 <button id="startButton">${__('Start Scan', 'acf-barcodescanner')}</button>
@@ -66,42 +66,42 @@ function initField($field) {
                 </div>
               </div>
           </div>`,
-          preConfirm: async (barcode) => {
-            const fetchedDatas = await mediasfetch(barcode, postType)
+					preConfirm: async (barcode) => {
+						const fetchedDatas = await mediasfetch(barcode, postType)
 
-            if (fetchedDatas) {
-              const booksPostTypes = ['mangas', 'books', 'bds']
-              if (booksPostTypes.includes(postType)) {
-                booksFieldsFiller(mainWrapper, fetchedDatas)
-              } else if (postType === 'cds') {
-                cdsFieldsFiller(mainWrapper, fetchedDatas)
-              } else if (postType === 'dvds') {
-                dvdsFieldsFiller(mainWrapper, fetchedDatas)
-              } else {
-                return null
-              }
-            } else {
-              console.error('No data could be retreived')
-            }
-          }
-        })
-      })
-    }
-  }
+						if (fetchedDatas) {
+							const booksPostTypes = ['mangas', 'books', 'bds']
+							if (booksPostTypes.includes(postType)) {
+								booksFieldsFiller(mainWrapper, fetchedDatas)
+							} else if (postType === 'cds') {
+								cdsFieldsFiller(mainWrapper, fetchedDatas)
+							} else if (postType === 'dvds') {
+								dvdsFieldsFiller(mainWrapper, fetchedDatas)
+							} else {
+								return null
+							}
+						} else {
+							console.error('No data could be retreived')
+						}
+					}
+				})
+			})
+		}
+	}
 }
 
 if (typeof acf.add_action !== 'undefined') {
-  /*
-   *  ready & append (ACF5)
-   *
-   *  These two events are called when a field element is ready for initizliation.
-   *  - ready: on page load similar to $(document).ready()
-   *  - append: on new DOM elements appended via repeater field or other AJAX calls
-   *
-   *  @paramn/a
-   *  @returnn/a
-   */
+	/*
+	 *  ready & append (ACF5)
+	 *
+	 *  These two events are called when a field element is ready for initizliation.
+	 *  - ready: on page load similar to $(document).ready()
+	 *  - append: on new DOM elements appended via repeater field or other AJAX calls
+	 *
+	 *  @paramn/a
+	 *  @returnn/a
+	 */
 
-  acf.add_action('ready_field/type=barcodescanner', initField)
-  acf.add_action('append_field/type=barcodescanner', initField)
+	acf.add_action('ready_field/type=barcodescanner', initField)
+	acf.add_action('append_field/type=barcodescanner', initField)
 }

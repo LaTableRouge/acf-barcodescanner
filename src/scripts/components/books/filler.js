@@ -1,4 +1,4 @@
-import { coverfetch } from './cover-fetch'
+import { coverfetch } from '../cover-fetch'
 
 export const booksFieldsFiller = (mainWrapper, fetchedDatas = {}) => {
 	const postTitle = mainWrapper.querySelector('#title')
