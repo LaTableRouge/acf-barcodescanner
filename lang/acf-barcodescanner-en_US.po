@@ -2,12 +2,11 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Advanced Custom Fields: Barcode scanner "
-"1.0.0\n"
+"Project-Id-Version: Advanced Custom Fields: Barcode scanner 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/acf-"
 "barcodescanner\n"
-"POT-Creation-Date: 2025-11-11T11:24:46+00:00\n"
-"PO-Revision-Date: 2025-11-11 12:25+0100\n"
+"POT-Creation-Date: 2025-12-04T12:44:44+00:00\n"
+"PO-Revision-Date: 2025-12-04 13:45+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: en_US\n"
@@ -74,28 +73,73 @@ msgstr "HTTP Error: %s"
 msgid "Failed to load URL"
 msgstr "Failed to load URL"
 
-#: fields/class-my-acf-field-barcodescanner.php:188
+#: fields/class-my-acf-field-barcodescanner.php:179
+msgid "Cover image not found"
+msgstr "Cover image not found"
+
+#: fields/class-my-acf-field-barcodescanner.php:187
 #, php-format
 msgid "Error uploading image: %s"
 msgstr "Error uploading image: %s"
 
-#: fields/class-my-acf-field-barcodescanner.php:235
+#: fields/class-my-acf-field-barcodescanner.php:194
+msgid "Cover fetched and uploaded successfully"
+msgstr "Cover fetched and uploaded successfully"
+
+#: fields/class-my-acf-field-barcodescanner.php:234
 #: fields/class-my-acf-field-barcodescanner.php:237
-#| msgid "Scanner"
 msgid "Scan"
 msgstr "Scan"
 
+#: build/index.js:1
+msgid ""
+"Barcode Detector is not supported by this browser. You can try to type the "
+"barcode manually."
+msgstr ""
+"Barcode Detector is not supported by this browser. You can try to type the "
+"barcode manually."
+
+#: build/index.js:1
+msgid "Data filled successfully"
+msgstr "Data filled successfully"
+
+#: build/index.js:1
+msgid "Tracklist:"
+msgstr "Tracklist:"
+
+#: build/index.js:1
+msgid "Scannez un code barre"
+msgstr "Scan a barcode"
+
+#: build/index.js:1
+msgid "Récupérer les données"
+msgstr "Fetch the data"
+
+#: build/index.js:1
+msgid "Start Scan"
+msgstr "Start the scan"
+
+#: build/index.js:1
+msgid "Success"
+msgstr "Success"
+
+#: build/index.js:1
+msgid "Error"
+msgstr "Error"
+
+#: build/index.js:1
+msgid "An error occurred while filling the fields"
+msgstr "An error occurred while filling the fields"
+
+#: build/index.js:1
+msgid "No data could be retreived"
+msgstr "No data could be retreived"
+
+#~ msgid "Empty response from server"
+#~ msgstr "Empty response from server"
+
+#~ msgid "Error fetching media data:"
+#~ msgstr "Error fetching media data:"
+
 #~ msgid "PLUGIN_URL"
 #~ msgstr "PLUGIN_URL"
-
-#~ msgid "Tracklist:"
-#~ msgstr "Tracklist:"
-
-#~ msgid "Scannez un code barre"
-#~ msgstr "Scan a barcode"
-
-#~ msgid "Récupérer les données"
-#~ msgstr "Fetch the data"
-
-#~ msgid "Start Scan"
-#~ msgstr "Start the scan"

@@ -1,3 +1,4 @@
+import { __ } from '@wordpress/i18n'
 /**
  * Barcode Scanner Component
  *
@@ -86,7 +87,7 @@ export class BarcodeScanner {
 			this.isBarcodeDetectorAvailable = true
 			this.barcodeDetector = new window.BarcodeDetector()
 		} else {
-			alert('Barcode Detector is not supported by this browser.')
+			alert(__('Barcode Detector is not supported by this browser. You can try to type the barcode manually.', 'acf-barcodescanner'))
 			this.startButton.style.display = 'none'
 			return
 		}

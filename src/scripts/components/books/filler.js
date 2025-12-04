@@ -1,16 +1,18 @@
-import { coverfetch } from './cover-fetch'
+import { __ } from '@wordpress/i18n'
 
-export const booksFieldsFiller = (mainWrapper, fetchedDatas = {}) => {
+import { coverfetch } from '../cover-fetch'
+
+export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 	const postTitle = mainWrapper.querySelector('#title')
-	if (postTitle && !postTitle.value.length && fetchedDatas.title) {
-		postTitle.value = fetchedDatas.title
-		postTitle.dispatchEvent(new Event('input'))
-
-		const coverUrl = fetchedDatas.cover
-		if (coverUrl) {
-			coverfetch(coverUrl)
-		}
+	if (!postTitle) {
+		return []
 	}
+	if (postTitle.value.length && !fetchedDatas.title) {
+		return []
+	}
+
+	postTitle.value = fetchedDatas.title
+	postTitle.dispatchEvent(new Event('input'))
 
 	const postExcerpt = mainWrapper.querySelector('#excerpt')
 	if (postExcerpt && !postExcerpt.value.length && fetchedDatas.excerpt) {
@@ -64,7 +66,22 @@ export const booksFieldsFiller = (mainWrapper, fetchedDatas = {}) => {
 	}
 
 	const heightField = mainWrapper.querySelector('.acf-field[data-name*="_sizes"] .acf-field[data-name="height"] input[type="text"]')
-	if (heightField && !heightField.value.length && fetchedDatas.dimensions.height) {
+	if (heightField && !heightField.value.length && fetchedDatas.dimensions?.height) {
 		heightField.value = fetchedDatas.dimensions.height
 	}
+
+	const coverUrl = fetchedDatas.cover
+	let coverMessage = []
+	if (coverUrl) {
+		try {
+			const coverResponse = await coverfetch(coverUrl)
+			if (coverResponse?.data?.message) {
+				coverMessage.push(coverResponse.data.message)
+			}
+		} catch (error) {
+			console.error('Error fetching cover:', error)
+		}
+	}
+
+	return [__('Data filled successfully', 'acf-barcodescanner'), ...coverMessage]
 }

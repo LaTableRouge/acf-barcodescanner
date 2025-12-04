@@ -4,7 +4,7 @@
 Plugin Name: Advanced Custom Fields: Barcode scanner
 Plugin URI: https://github.com/LaTableRouge/acf-barcodescanner
 Description: Add Barcode scanner
-Version: 1.0.1
+Version: 1.1.1
 Author: Author: LaTableRouge
 Author URI: https://mlnop.fr
 License: GPLv2 or later
@@ -40,7 +40,7 @@ class Plugin {
         // settings
         // - these will be passed into the field class.
         $this->settings = [
-            'version' => '0.1',
+            'version' => '1.1.1',
             'url' => plugin_dir_url(__FILE__),
             'path' => plugin_dir_path(__FILE__),
             'lang_path' => plugin_dir_path(__FILE__) . 'lang',

@@ -1,179 +1,111 @@
-import { __ } from '@wordpress/i18n'
 
 import { variables } from '../common/variables'
+import { extractBookData } from './books/extract'
+import { extractCDData } from './cds/extract'
+import { XMLUtils } from './common/xml-utils'
+import { extractDVDData } from './dvds/extract'
 
-// Function to get text content from a specific tag with a specific attribute
-function getSubfieldText(datafields, tag, code) {
-	for (let i = 0; i < datafields.length; i++) {
-		if (datafields[i].getAttribute('tag') === tag) {
-			const subfields = datafields[i].getElementsByTagName('mxc:subfield')
-			for (let j = 0; j < subfields.length; j++) {
-				if (subfields[j].getAttribute('code') === code) {
-					return subfields[j].textContent.trim()
-				}
-			}
+// xml desc: https://www.bnf.fr/sites/default/files/2019-04/service_sru_bnf.pdf
+// Test url: https://catalogue.bnf.fr/api/SRU?version=1.2&recordSchema=unimarcXchange&operation=searchRetrieve&query=bib.anywhere+all+%279782811661427%27
+// Catalogue url: https://catalogue.bnf.fr/ark:/12148/cb46838232d
+
+// Post types that use book extraction logic
+const BOOKS_POST_TYPES = ['mangas', 'books', 'bds']
+
+/**
+ * BNF Media Fetcher Class
+ * Handles fetching and parsing bibliographic data from BNF SRU service
+ */
+class BNFMediaFetcher {
+	/**
+	 * Parse XML response and extract data based on post type
+	 * @param {string} xmlResponse - The XML response string
+	 * @param {string} postType - The post type (books, cds, dvds, etc.)
+	 * @returns {Object|null} Extracted data or null if parsing fails
+	 */
+	parseXMLResponse(xmlResponse, postType) {
+		if (!xmlResponse) {
+			console.error('Error: Empty XML response')
+			return null
 		}
-	}
-	return ''
-}
 
-function getFieldText(fields = [], tag = '') {
-	for (let i = 0; i < fields.length; i++) {
-		if (fields[i].getAttribute('tag') === tag) {
-			return fields[i].textContent.trim()
+		const parser = new DOMParser()
+		const xmlDoc = parser.parseFromString(xmlResponse, 'application/xml')
+
+		// Check for parsing errors
+		const parserError = xmlDoc.querySelector('parsererror')
+		if (parserError) {
+			console.error('XML parsing error:', parserError.textContent)
+			return null
 		}
+
+		const recordElements = xmlDoc.getElementsByTagName('srw:record')
+		if (recordElements.length === 0) {
+			console.warn("No 'record' elements found.")
+			return null
+		}
+
+		const recordElement = recordElements[0]
+		const datafields = recordElement.getElementsByTagName('mxc:datafield')
+		const controlFields = recordElement.getElementsByTagName('mxc:controlfield')
+
+		// Get cover page URL from controlfield 003
+		const coverPageUrl = XMLUtils.getFieldText(controlFields, '003')
+
+		// Extract data based on post type
+		if (BOOKS_POST_TYPES.includes(postType)) {
+			return extractBookData(datafields, recordElement, coverPageUrl)
+		} else if (postType === 'cds') {
+			return extractCDData(datafields, recordElement, coverPageUrl)
+		} else if (postType === 'dvds') {
+			return extractDVDData(datafields, recordElement, coverPageUrl)
+		}
+
+		return null
 	}
-	return ''
-}
 
-export const mediasfetch = async (barcode, postType) => {
-	barcode = barcode.replaceAll('-', '')
+	/**
+	 * Fetch media data from BNF SRU service
+	 * @param {string} barcode - The barcode to search for
+	 * @param {string} postType - The post type (books, cds, dvds, etc.)
+	 * @returns {Promise<Object|null>} Extracted data or null if fetch fails
+	 */
+	async fetch(barcode, postType) {
+		barcode = barcode.replaceAll('-', '')
 
-	const urlToFetchParams = {
-		version: '1.2',
-		recordSchema: 'unimarcXchange',
-		operation: 'searchRetrieve',
-		query: `bib.anywhere all '${barcode}'`
-	}
+		const urlToFetchParams = {
+			version: '1.2',
+			recordSchema: 'unimarcXchange',
+			operation: 'searchRetrieve',
+			query: `bib.anywhere all '${barcode}'`
+		}
 
-	const urltoFetch = `https://catalogue.bnf.fr/api/SRU?${new URLSearchParams(urlToFetchParams)}`
+		const urltoFetch = `https://catalogue.bnf.fr/api/SRU?${new URLSearchParams(urlToFetchParams)}`
 
-	const phpQueryParams = {
-		action: 'acfbcs_fetch_from_barcode',
-		url: urltoFetch
-	}
+		const phpQueryParams = {
+			action: 'acfbcs_fetch_from_barcode',
+			url: urltoFetch
+		}
 
-	// xml desc: https://www.bnf.fr/sites/default/files/2019-04/service_sru_bnf.pdf
-	// Test url: https://catalogue.bnf.fr/api/SRU?version=1.2&recordSchema=unimarcXchange&operation=searchRetrieve&query=bib.anywhere+all+%279782811661427%27
-	// Catalogue url: https://catalogue.bnf.fr/ark:/12148/cb46838232d
-	return await fetch(`${variables.ajaxURL}?${new URLSearchParams(phpQueryParams)}`)
-		.then(async (response) => {
-			response = await response.text()
+		try {
+			const response = await fetch(`${variables.ajaxURL}?${new URLSearchParams(phpQueryParams)}`)
+			const xmlResponse = await response.text()
 
-			if (!response) {
-				console.error('Error in the response')
-
-				return
-			}
-
-			const parser = new DOMParser()
-			const xmlDoc = parser.parseFromString(response, 'application/xml')
-
-			// Try accessing the 'record' element without namespaces as a test
-			const recordElements = xmlDoc.getElementsByTagName('srw:record')
-			if (recordElements.length === 0) {
-				console.warn("No 'record' elements found.")
-
-				return
-			}
-
-			const recordElement = recordElements[0]
-			const datafields = recordElement.getElementsByTagName('mxc:datafield')
-			const controlFields = recordElement.getElementsByTagName('mxc:controlfield')
-			const coverPageUrl = getFieldText(controlFields, '003')
-
-			const booksPostTypes = ['mangas', 'books', 'bds']
-			if (booksPostTypes.includes(postType)) {
-				const title = getSubfieldText(datafields, '200', 'a')
-				const author = getSubfieldText(datafields, '200', 'f')
-				const volumeNumber = getSubfieldText(datafields, '461', 'v')
-				const editor = getSubfieldText(datafields, '214', 'c')
-				const excerpt = getSubfieldText(datafields, '830', 'a')
-				const height = getSubfieldText(datafields, '280', 'd')
-				const isbn = getSubfieldText(datafields, '010', 'a')
-
-				const extraRecordData = recordElement.getElementsByTagName('srw:extraRecordData')[0]
-				const creationDateAttr = extraRecordData.getElementsByTagName('ixm:attr')
-				let year = ''
-				for (let i = 0; i < creationDateAttr.length; i++) {
-					if (creationDateAttr[i].getAttribute('name') === 'CreationDate') {
-						const creationDateStr = creationDateAttr[i].textContent
-						const creationDate = new Date(creationDateStr.slice(0, 4), creationDateStr[4] + creationDateStr[5] - 1, creationDateStr[6] + creationDateStr[7])
-						year = creationDate.getFullYear()
-						break
-					}
-				}
-
-				return {
-					title,
-					editor,
-					author,
-					excerpt,
-					isbn,
-					dimensions: {
-						height
-					},
-					volumeNumber,
-					year,
-					cover: coverPageUrl
-				}
-			} else if (postType === 'cds') {
-				const title = getSubfieldText(datafields, '200', 'a')
-				const artist = getSubfieldText(datafields, '200', 'f')
-				const idNumber = getSubfieldText(datafields, '071', 'a')
-				const isni = getSubfieldText(datafields, '710', 'o')
-				const height = getSubfieldText(datafields, '215', 'd')
-
-				// Extracting tracklist
-				const tracklist = []
-				for (let i = 0; i < datafields.length; i++) {
-					if (datafields[i].getAttribute('tag') === '464') {
-						const subfields = datafields[i].getElementsByTagName('mxc:subfield')
-						for (let j = 0; j < subfields.length; j++) {
-							if (subfields[j].getAttribute('code') === 't') {
-								tracklist.push(subfields[j].textContent.trim())
-							}
-						}
-					}
-				}
-
-				const extraRecordData = recordElement.getElementsByTagName('srw:extraRecordData')[0]
-				const creationDateAttr = extraRecordData.getElementsByTagName('ixm:attr')
-				let year = ''
-				for (let i = 0; i < creationDateAttr.length; i++) {
-					if (creationDateAttr[i].getAttribute('name') === 'CreationDate') {
-						const creationDateStr = creationDateAttr[i].textContent
-						const creationDate = new Date(creationDateStr.slice(0, 4), creationDateStr[4] + creationDateStr[5] - 1, creationDateStr[6] + creationDateStr[7])
-						year = creationDate.getFullYear()
-						break
-					}
-				}
-
-				return {
-					title,
-					artist,
-					idNumber,
-					isni,
-					dimensions: {
-						height
-					},
-					excerpt: tracklist.length ? `${__('Tracklist:', 'acf-barcodescanner')} ${tracklist.join(', ')}` : '',
-					year,
-					cover: coverPageUrl
-				}
-			} else if (postType === 'dvds') {
-				const title = getSubfieldText(datafields, '200', 'a')
-
-				const extraRecordData = recordElement.getElementsByTagName('srw:extraRecordData')[0]
-				const creationDateAttr = extraRecordData.getElementsByTagName('ixm:attr')
-				let year = ''
-				for (let i = 0; i < creationDateAttr.length; i++) {
-					if (creationDateAttr[i].getAttribute('name') === 'CreationDate') {
-						const creationDateStr = creationDateAttr[i].textContent
-						const creationDate = new Date(creationDateStr.slice(0, 4), creationDateStr[4] + creationDateStr[5] - 1, creationDateStr[6] + creationDateStr[7])
-						year = creationDate.getFullYear()
-						break
-					}
-				}
-
-				return {
-					title,
-					year,
-					cover: coverPageUrl
-				}
-			} else {
+			if (!xmlResponse) {
+				console.error('Empty response from server')
 				return null
 			}
-		})
-		.catch(console.error)
+
+			return this.parseXMLResponse(xmlResponse, postType)
+		} catch (error) {
+			console.error('Error fetching media data:', error)
+			return null
+		}
+	}
 }
+
+// Create singleton instance
+const bnfMediaFetcher = new BNFMediaFetcher()
+
+// Export the fetch function for backward compatibility
+export const mediasfetch = (barcode, postType) => bnfMediaFetcher.fetch(barcode, postType)

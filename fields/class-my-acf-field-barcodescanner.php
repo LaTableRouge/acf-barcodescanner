@@ -134,12 +134,12 @@ class BarcodeScannerField extends \acf_field {
     public function fetch_cover_from_url(): void {
         // Validate and sanitize URL parameter
         if (!isset($_GET['url']) || !is_string($_GET['url'])) {
-            wp_send_json_error(['status' => 'error', 'message' => __('Invalid URL parameter', 'acf-barcodescanner')]);
+            wp_send_json_error(['message' => __('Invalid URL parameter', 'acf-barcodescanner')]);
         }
 
         $url = sanitize_url($_GET['url']);
         if (empty($url)) {
-            wp_send_json_error(['status' => 'error', 'message' => __('Invalid or empty URL', 'acf-barcodescanner')]);
+            wp_send_json_error(['message' => __('Invalid or empty URL', 'acf-barcodescanner')]);
         }
 
         // Load and parse HTML
@@ -149,7 +149,7 @@ class BarcodeScannerField extends \acf_field {
         libxml_clear_errors();
 
         if (!$loaded) {
-            wp_send_json_error(['status' => 'error', 'message' => __('Failed to load URL', 'acf-barcodescanner')]);
+            wp_send_json_error(['message' => __('Failed to load URL', 'acf-barcodescanner')]);
         }
 
         // Find cover image
@@ -176,7 +176,7 @@ class BarcodeScannerField extends \acf_field {
         }
 
         if (!$cover) {
-            wp_send_json_error(['status' => 'error', 'message' => 'Cover image not found']);
+            wp_send_json_error(['message' => __('Cover image not found', 'acf-barcodescanner')]);
         }
 
         // Upload image to WordPress media library
@@ -184,7 +184,6 @@ class BarcodeScannerField extends \acf_field {
 
         if (is_wp_error($wp_media_id)) {
             wp_send_json_error([
-                'status' => 'error',
                 'message' => sprintf(__('Error uploading image: %s', 'acf-barcodescanner'), $wp_media_id->get_error_message())
             ]);
         }
@@ -192,7 +191,7 @@ class BarcodeScannerField extends \acf_field {
         wp_send_json_success([
             'cover_url' => $cover,
             'id' => $wp_media_id,
-            'status' => 'success'
+            'message' => __('Cover fetched and uploaded successfully', 'acf-barcodescanner')
         ]);
     }
 
