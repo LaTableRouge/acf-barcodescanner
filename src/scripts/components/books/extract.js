@@ -26,8 +26,8 @@ export function extractBookData(datafields, recordElement, coverPageUrl) {
 	// Physical dimensions from field 215 (physical description) or 280
 	const height = XMLUtils.getSubfieldText(datafields, '215', 'd') || XMLUtils.getSubfieldText(datafields, '280', 'd')
 
-	// ISBN from field 010
-	const isbn = XMLUtils.getSubfieldText(datafields, '010', 'a')
+	// ISBN-13 is in field 073 subfield 'a', fallback to field 010 subfield 'a' for ISBN-10
+	const isbn = XMLUtils.getSubfieldText(datafields, '073', 'a') || XMLUtils.getSubfieldText(datafields, '010', 'a')
 
 	// Extract year - prefer publication year from datafields, fallback to cataloging date
 	let year = XMLUtils.extractPublicationYear(datafields)

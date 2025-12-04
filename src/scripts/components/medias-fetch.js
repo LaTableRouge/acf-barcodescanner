@@ -1,8 +1,13 @@
+
 import { variables } from '../common/variables'
 import { extractBookData } from './books/extract'
 import { extractCDData } from './cds/extract'
 import { XMLUtils } from './common/xml-utils'
 import { extractDVDData } from './dvds/extract'
+
+// xml desc: https://www.bnf.fr/sites/default/files/2019-04/service_sru_bnf.pdf
+// Test url: https://catalogue.bnf.fr/api/SRU?version=1.2&recordSchema=unimarcXchange&operation=searchRetrieve&query=bib.anywhere+all+%279782811661427%27
+// Catalogue url: https://catalogue.bnf.fr/ark:/12148/cb46838232d
 
 // Post types that use book extraction logic
 const BOOKS_POST_TYPES = ['mangas', 'books', 'bds']
@@ -87,7 +92,7 @@ class BNFMediaFetcher {
 			const xmlResponse = await response.text()
 
 			if (!xmlResponse) {
-				console.error('Error: Empty response from server')
+				console.error('Empty response from server')
 				return null
 			}
 

@@ -2,12 +2,11 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Advanced Custom Fields: Barcode scanner "
-"1.0.0\n"
+"Project-Id-Version: Advanced Custom Fields: Barcode scanner 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/acf-"
 "barcodescanner\n"
-"POT-Creation-Date: 2025-11-11T11:24:46+00:00\n"
-"PO-Revision-Date: 2025-11-11 12:25+0100\n"
+"POT-Creation-Date: 2025-12-04T12:44:44+00:00\n"
+"PO-Revision-Date: 2025-12-04 13:45+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -74,27 +73,73 @@ msgstr "Erreur HTTP : %s"
 msgid "Failed to load URL"
 msgstr "Échec du chargement de l'URL"
 
-#: fields/class-my-acf-field-barcodescanner.php:188
+#: fields/class-my-acf-field-barcodescanner.php:179
+msgid "Cover image not found"
+msgstr "Image de couverture introuvable"
+
+#: fields/class-my-acf-field-barcodescanner.php:187
 #, php-format
 msgid "Error uploading image: %s"
 msgstr "Erreur lors du téléchargement de l'image : %s"
 
-#: fields/class-my-acf-field-barcodescanner.php:235
+#: fields/class-my-acf-field-barcodescanner.php:194
+msgid "Cover fetched and uploaded successfully"
+msgstr "Couverture récupérée et téléversée avec succès"
+
+#: fields/class-my-acf-field-barcodescanner.php:234
 #: fields/class-my-acf-field-barcodescanner.php:237
 msgid "Scan"
 msgstr "Scanner"
 
+#: build/index.js:1
+msgid ""
+"Barcode Detector is not supported by this browser. You can try to type the "
+"barcode manually."
+msgstr ""
+"Le détecteur de code-barres n'est pas pris en charge par ce navigateur. Vous "
+"pouvez essayer de saisir le code-barres manuellement."
+
+#: build/index.js:1
+msgid "Data filled successfully"
+msgstr "Données saisies avec succès"
+
+#: build/index.js:1
+msgid "Tracklist:"
+msgstr "Liste des chansons :"
+
+#: build/index.js:1
+msgid "Scannez un code barre"
+msgstr "Scanner un code barre"
+
+#: build/index.js:1
+msgid "Récupérer les données"
+msgstr "Récupérer les données"
+
+#: build/index.js:1
+msgid "Start Scan"
+msgstr "Commencer le scan"
+
+#: build/index.js:1
+msgid "Success"
+msgstr "Succès"
+
+#: build/index.js:1
+msgid "Error"
+msgstr "Erreur"
+
+#: build/index.js:1
+msgid "An error occurred while filling the fields"
+msgstr "Une erreur s'est produite lors du remplissage des champs."
+
+#: build/index.js:1
+msgid "No data could be retreived"
+msgstr "Aucune donnée n'a pu être récupérée."
+
+#~ msgid "Empty response from server"
+#~ msgstr "Réponse vide du serveur"
+
+#~ msgid "Error fetching media data:"
+#~ msgstr "Erreur lors de la récupération des données multimédia :"
+
 #~ msgid "PLUGIN_URL"
 #~ msgstr "PLUGIN_URL"
-
-#~ msgid "Tracklist:"
-#~ msgstr "Liste des chansons :"
-
-#~ msgid "Scannez un code barre"
-#~ msgstr "Scanner un code barre"
-
-#~ msgid "Récupérer les données"
-#~ msgstr "Récupérer les données"
-
-#~ msgid "Start Scan"
-#~ msgstr "Commencer le scan"

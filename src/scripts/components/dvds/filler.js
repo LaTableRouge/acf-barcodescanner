@@ -1,16 +1,18 @@
+import { __ } from '@wordpress/i18n'
+
 import { coverfetch } from '../cover-fetch'
 
-export const dvdsFieldsFiller = (mainWrapper, fetchedDatas = {}) => {
+export const dvdsFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 	const postTitle = mainWrapper.querySelector('#title')
-	if (postTitle && !postTitle.value.length && fetchedDatas.title) {
-		postTitle.value = fetchedDatas.title
-		postTitle.dispatchEvent(new Event('input'))
-
-		const coverUrl = fetchedDatas.cover
-		if (coverUrl) {
-			coverfetch(coverUrl)
-		}
+	if (!postTitle) {
+		return
 	}
+	if (postTitle.value.length && !fetchedDatas.title) {
+		return
+	}
+
+	postTitle.value = fetchedDatas.title
+	postTitle.dispatchEvent(new Event('input'))
 
 	const postExcerpt = mainWrapper.querySelector('#excerpt')
 	if (postExcerpt && !postExcerpt.value.length && fetchedDatas.excerpt) {
@@ -36,4 +38,19 @@ export const dvdsFieldsFiller = (mainWrapper, fetchedDatas = {}) => {
 	if (yearField && !yearField.value.length && fetchedDatas.year) {
 		yearField.value = fetchedDatas.year
 	}
+
+	const coverUrl = fetchedDatas.cover
+	let coverMessage = []
+	if (coverUrl) {
+		try {
+			const coverResponse = await coverfetch(coverUrl)
+			if (coverResponse?.data?.message) {
+				coverMessage.push(coverResponse.data.message)
+			}
+		} catch (error) {
+			console.error('Error fetching cover:', error)
+		}
+	}
+
+	return [__('Data filled successfully', 'acf-barcodescanner'), ...coverMessage]
 }

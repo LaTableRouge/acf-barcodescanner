@@ -46,6 +46,7 @@ function initField($field) {
 					customClass: {
 						popup: 'acfbcs__popup'
 					},
+					showLoaderOnConfirm: true,
 					confirmButtonText: __('Récupérer les données', 'acf-barcodescanner'),
 					didOpen: (wrapper) => {
 						barcodeScanner(wrapper)
@@ -71,16 +72,24 @@ function initField($field) {
 
 						if (fetchedDatas) {
 							const booksPostTypes = ['mangas', 'books', 'bds']
-							if (booksPostTypes.includes(postType)) {
-								booksFieldsFiller(mainWrapper, fetchedDatas)
-							} else if (postType === 'cds') {
-								cdsFieldsFiller(mainWrapper, fetchedDatas)
-							} else if (postType === 'dvds') {
-								dvdsFieldsFiller(mainWrapper, fetchedDatas)
-							} else {
-								return null
+							let messages = []
+							try {
+								if (booksPostTypes.includes(postType)) {
+									messages = (await booksFieldsFiller(mainWrapper, fetchedDatas)) || []
+								} else if (postType === 'cds') {
+									messages = (await cdsFieldsFiller(mainWrapper, fetchedDatas)) || []
+								} else if (postType === 'dvds') {
+									messages = (await dvdsFieldsFiller(mainWrapper, fetchedDatas)) || []
+								} else {
+									return null
+								}
+								Swal.fire(__('Success', 'acf-barcodescanner'), messages.join('<br>'), 'success')
+							} catch (error) {
+								console.error('Error filling fields:', error)
+								Swal.fire(__('Error', 'acf-barcodescanner'), __('An error occurred while filling the fields', 'acf-barcodescanner'), 'error')
 							}
 						} else {
+							Swal.fire(__('Error', 'acf-barcodescanner'), __('No data could be retreived', 'acf-barcodescanner'), 'error')
 							console.error('No data could be retreived')
 						}
 					}

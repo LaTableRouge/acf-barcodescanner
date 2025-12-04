@@ -157,7 +157,7 @@ The project uses:
 **Generate .pot file (from the plugin's directory):**
 
 ```bash
-wp i18n make-pot . lang/acf-barcodescanner.pot --domain=acf-barcodescanner --exclude=node_modules,vendor,lang,build --include=*.php
+wp i18n make-pot . lang/acf-barcodescanner.pot --domain=acf-barcodescanner --exclude=node_modules,vendor,lang --include=*.php,build
 ```
 
 **Generate JSON translation files for JavaScript (from the plugin's directory):**

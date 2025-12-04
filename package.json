@@ -1,6 +1,6 @@
 {
 	"name": "acf-barcode-scanner",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "A plugin add a barcode scanner to acf",
 	"main": "index.js",
 	"keywords": [

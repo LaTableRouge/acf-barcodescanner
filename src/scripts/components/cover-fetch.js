@@ -8,21 +8,7 @@ export const coverfetch = async (pageurl) => {
 
 	return await fetch(`${variables.ajaxURL}?${new URLSearchParams(phpQueryParams)}`)
 		.then(async (response) => {
-			response = await response.json()
-
-			if (!response) {
-				console.error('Error in the response')
-
-				return
-			}
-
-			if (!Object.keys(response).length) {
-				console.warn("No 'cover' found.")
-
-				return
-			}
-
-			return response.cover_url
+			return await response.json()
 		})
 		.catch(console.error)
 }
