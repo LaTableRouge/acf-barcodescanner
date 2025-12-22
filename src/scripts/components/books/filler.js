@@ -7,12 +7,12 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 	if (!postTitle) {
 		return []
 	}
-	if (postTitle.value.length && !fetchedDatas.title) {
-		return []
-	}
 
-	postTitle.value = fetchedDatas.title
-	postTitle.dispatchEvent(new Event('input'))
+	const hasExistingTitle = postTitle.value.length > 0
+	if (!hasExistingTitle && fetchedDatas.title) {
+		postTitle.value = fetchedDatas.title
+		postTitle.dispatchEvent(new Event('input'))
+	}
 
 	const postExcerpt = mainWrapper.querySelector('#excerpt')
 	if (postExcerpt && !postExcerpt.value.length && fetchedDatas.excerpt) {
@@ -40,8 +40,8 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 
 				let newlyCreatedRow = rows.length
 					? [...updatedRows].filter(function (obj) {
-							return [...rows].indexOf(obj) == -1
-						})
+						return [...rows].indexOf(obj) == -1
+					})
 					: [...updatedRows]
 				if (newlyCreatedRow.length) {
 					newlyCreatedRow = newlyCreatedRow[0]
@@ -72,7 +72,7 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 
 	const coverUrl = fetchedDatas.cover
 	let coverMessage = []
-	if (coverUrl) {
+	if (coverUrl && !hasExistingTitle) {
 		try {
 			const coverResponse = await coverfetch(coverUrl)
 			if (coverResponse?.data?.message) {
@@ -82,6 +82,6 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 			console.error('Error fetching cover:', error)
 		}
 	}
-
+	
 	return [__('Data filled successfully', 'acf-barcodescanner'), ...coverMessage]
 }

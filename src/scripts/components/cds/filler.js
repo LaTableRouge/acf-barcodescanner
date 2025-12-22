@@ -5,14 +5,14 @@ import { coverfetch } from '../cover-fetch'
 export const cdsFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 	const postTitle = mainWrapper.querySelector('#title')
 	if (!postTitle) {
-		return
-	}
-	if (postTitle.value.length && !fetchedDatas.title) {
-		return
+		return []
 	}
 
-	postTitle.value = fetchedDatas.title
-	postTitle.dispatchEvent(new Event('input'))
+	const hasExistingTitle = postTitle.value.length > 0
+	if (!hasExistingTitle && fetchedDatas.title) {
+		postTitle.value = fetchedDatas.title
+		postTitle.dispatchEvent(new Event('input'))
+	}
 
 	const postExcerpt = mainWrapper.querySelector('#excerpt')
 	if (postExcerpt && !postExcerpt.value.length && fetchedDatas.excerpt) {
@@ -36,7 +36,7 @@ export const cdsFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 
 	const coverUrl = fetchedDatas.cover
 	let coverMessage = []
-	if (coverUrl) {
+	if (coverUrl && !hasExistingTitle) {
 		try {
 			const coverResponse = await coverfetch(coverUrl)
 			if (coverResponse?.data?.message) {
