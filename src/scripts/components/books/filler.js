@@ -40,11 +40,25 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 
 				let newlyCreatedRow = rows.length
 					? [...updatedRows].filter(function (obj) {
-						return [...rows].indexOf(obj) == -1
-					})
+							return [...rows].indexOf(obj) == -1
+						})
 					: [...updatedRows]
 				if (newlyCreatedRow.length) {
 					newlyCreatedRow = newlyCreatedRow[0]
+
+					// If postTitle is already filled and datafield 225 (series title) matches the postTitle,
+					// fill the volume_title field with the book title
+					if (hasExistingTitle && fetchedDatas.seriesTitle && fetchedDatas.title) {
+						const postTitleValue = postTitle.value.trim()
+						const seriesTitleValue = fetchedDatas.seriesTitle.trim()
+
+						if (postTitleValue === seriesTitleValue) {
+							const volumeTitleField = newlyCreatedRow.querySelector('.acf-field[data-name="volume_title"] input[type="text"]')
+							if (volumeTitleField && !volumeTitleField.value.length) {
+								volumeTitleField.value = fetchedDatas.title
+							}
+						}
+					}
 
 					const volumeNumberField = newlyCreatedRow.querySelector('.acf-field[data-name="volume_number"] input[type="number"]')
 					if (volumeNumberField && !volumeNumberField.value.length && fetchedDatas.volumeNumber) {
@@ -82,6 +96,6 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 			console.error('Error fetching cover:', error)
 		}
 	}
-	
+
 	return [__('Data filled successfully', 'acf-barcodescanner'), ...coverMessage]
 }

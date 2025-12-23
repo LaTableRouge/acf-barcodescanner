@@ -1,4 +1,3 @@
-
 import { variables } from '../common/variables'
 import { extractBookData } from './books/extract'
 import { extractCDData } from './cds/extract'

@@ -17,6 +17,9 @@ export function extractBookData(datafields, recordElement, coverPageUrl) {
 	// Volume number from field 461 (series) or 225 (series statement)
 	const volumeNumber = XMLUtils.getSubfieldText(datafields, '461', 'v') || XMLUtils.getSubfieldText(datafields, '225', 'v')
 
+	// Series title from field 225 (series statement) subfield 'a'
+	const seriesTitle = XMLUtils.getSubfieldText(datafields, '461', 't')
+
 	// Editor/Publisher from field 214 or 210 (publication, distribution, etc.)
 	const editor = XMLUtils.getSubfieldText(datafields, '214', 'c') || XMLUtils.getSubfieldText(datafields, '210', 'c')
 
@@ -46,6 +49,7 @@ export function extractBookData(datafields, recordElement, coverPageUrl) {
 			height
 		},
 		volumeNumber,
+		seriesTitle,
 		year,
 		cover: coverPageUrl
 	}
