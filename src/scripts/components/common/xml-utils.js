@@ -229,4 +229,60 @@ export class XMLUtils {
 
 		return ''
 	}
+
+	/**
+	 * Convert centimeters to millimeters (rounded integer for ACF number fields).
+	 * @param {number|string} cm
+	 * @returns {number|null}
+	 */
+	static cmToMm(cm) {
+		const value = typeof cm === 'number' ? cm : parseFloat(String(cm).replace(',', '.'))
+		if (Number.isNaN(value)) {
+			return null
+		}
+		return Math.round(value * 10)
+	}
+
+	/**
+	 * Parse UNIMARC field 215 $d (physical dimensions) into width/height in mm.
+	 * Examples: "18 cm", "18 x 12 cm", "12 × 18 cm"
+	 * Single value is treated as height; two values use smaller as width, larger as height.
+	 * @param {string} raw - Raw subfield text
+	 * @returns {{ width: number|null, height: number|null }}
+	 */
+	static parsePhysicalDimensions(raw) {
+		if (!raw) {
+			return { width: null, height: null }
+		}
+
+		const trimmed = raw.trim()
+
+		const twoDimMatch = trimmed.match(/(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*cm/i)
+		if (twoDimMatch) {
+			const first = parseFloat(twoDimMatch[1].replace(',', '.'))
+			const second = parseFloat(twoDimMatch[2].replace(',', '.'))
+			const smaller = Math.min(first, second)
+			const larger = Math.max(first, second)
+			return {
+				width: this.cmToMm(smaller),
+				height: this.cmToMm(larger)
+			}
+		}
+
+		const oneDimMatch = trimmed.match(/(\d+(?:[.,]\d+)?)\s*cm/i)
+		if (oneDimMatch) {
+			return {
+				width: null,
+				height: this.cmToMm(oneDimMatch[1])
+			}
+		}
+
+		const mmMatch = trimmed.match(/(\d+(?:[.,]\d+)?)\s*mm/i)
+		if (mmMatch) {
+			const mm = Math.round(parseFloat(mmMatch[1].replace(',', '.')))
+			return { width: null, height: Number.isNaN(mm) ? null : mm }
+		}
+
+		return { width: null, height: null }
+	}
 }

@@ -2,6 +2,68 @@ import { __ } from '@wordpress/i18n'
 
 import { coverfetch } from '../cover-fetch'
 
+const REPEATER_ROW_DELAY_MS = 100
+
+/**
+ * Fill number inputs on a repeater row only when empty.
+ * @param {Element} row
+ * @param {Record<string, number|null|undefined>} fieldValues - data-name → value (mm)
+ */
+function fillRepeaterRowNumbers(row, fieldValues) {
+	if (!row) {
+		return
+	}
+	for (const [fieldName, value] of Object.entries(fieldValues)) {
+		if (value == null || value === '') {
+			continue
+		}
+		const input = row.querySelector(`.acf-field[data-name="${fieldName}"] input`)
+		if (input && !input.value.length) {
+			input.value = value
+			input.dispatchEvent(new Event('input'))
+		}
+	}
+}
+
+/**
+ * Fill sizes repeater (Longueur / Hauteur in mm). Adds a row when none exist.
+ * @param {Element} mainWrapper
+ * @param {{ width?: number|null, height?: number|null }} dimensions
+ */
+function fillSizesRepeater(mainWrapper, dimensions = {}) {
+	const { width, height } = dimensions
+	if (width == null && height == null) {
+		return
+	}
+
+	const sizesFieldWrapper = mainWrapper.querySelector('.acf-field[data-name*="_sizes"]')
+	if (!sizesFieldWrapper) {
+		return
+	}
+
+	const fieldValues = {
+		sizes_width: width,
+		sizes_height: height
+	}
+
+	const existingRows = sizesFieldWrapper.querySelectorAll('.acf-row:not(.acf-clone)')
+	if (existingRows.length > 0) {
+		fillRepeaterRowNumbers(existingRows[0], fieldValues)
+		return
+	}
+
+	const addRowButton = sizesFieldWrapper.querySelector('.acf-repeater-add-row')
+	if (!addRowButton) {
+		return
+	}
+
+	addRowButton.click()
+	setTimeout(() => {
+		const rows = sizesFieldWrapper.querySelectorAll('.acf-row:not(.acf-clone)')
+		fillRepeaterRowNumbers(rows[rows.length - 1], fieldValues)
+	}, REPEATER_ROW_DELAY_MS)
+}
+
 export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 	const postTitle = mainWrapper.querySelector('#title')
 	if (!postTitle) {
@@ -75,14 +137,11 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 						yearField.value = fetchedDatas.year
 					}
 				}
-			}, 100)
+			}, REPEATER_ROW_DELAY_MS)
 		}
 	}
 
-	const heightField = mainWrapper.querySelector('.acf-field[data-name*="_sizes"] .acf-field[data-name="height"] input[type="text"]')
-	if (heightField && !heightField.value.length && fetchedDatas.dimensions?.height) {
-		heightField.value = fetchedDatas.dimensions.height
-	}
+	fillSizesRepeater(mainWrapper, fetchedDatas.dimensions)
 
 	const coverUrl = fetchedDatas.cover
 	let coverMessage = []
