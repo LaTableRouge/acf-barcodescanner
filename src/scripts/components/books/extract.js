@@ -27,7 +27,9 @@ export function extractBookData(datafields, recordElement, coverPageUrl) {
 	const excerpt = XMLUtils.getSubfieldText(datafields, '330', 'a') || XMLUtils.getSubfieldText(datafields, '830', 'a')
 
 	// Physical dimensions from field 215 (physical description) or 280
-	const height = XMLUtils.getSubfieldText(datafields, '215', 'd') || XMLUtils.getSubfieldText(datafields, '280', 'd')
+	const dimensionsRaw =
+		XMLUtils.getSubfieldText(datafields, '215', 'd') || XMLUtils.getSubfieldText(datafields, '280', 'd')
+	const dimensions = XMLUtils.parsePhysicalDimensions(dimensionsRaw)
 
 	// ISBN-13 is in field 073 subfield 'a', fallback to field 010 subfield 'a' for ISBN-10
 	const isbn = XMLUtils.getSubfieldText(datafields, '073', 'a') || XMLUtils.getSubfieldText(datafields, '010', 'a')
@@ -45,9 +47,7 @@ export function extractBookData(datafields, recordElement, coverPageUrl) {
 		author,
 		excerpt,
 		isbn,
-		dimensions: {
-			height
-		},
+		dimensions,
 		volumeNumber,
 		seriesTitle,
 		year,
