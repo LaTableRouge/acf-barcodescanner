@@ -1,5 +1,6 @@
 import { __ } from '@wordpress/i18n'
 
+import { XMLUtils } from '../common/xml-utils'
 import { coverfetch } from '../cover-fetch'
 
 const REPEATER_ROW_DELAY_MS = 100
@@ -31,7 +32,7 @@ function fillRepeaterRowNumbers(row, fieldValues) {
  * @param {{ width?: number|null, height?: number|null }} dimensions
  */
 function fillSizesRepeater(mainWrapper, dimensions = {}) {
-	const { width, height } = dimensions
+	const { height, width } = dimensions
 	if (width == null && height == null) {
 		return
 	}
@@ -71,8 +72,12 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 	}
 
 	const hasExistingTitle = postTitle.value.length > 0
-	if (!hasExistingTitle && fetchedDatas.title) {
-		postTitle.value = fetchedDatas.title
+	const seriesTitle = fetchedDatas.seriesTitle
+	const volumeTitle = fetchedDatas.title
+	const postTitleToUse = seriesTitle || volumeTitle
+
+	if (!hasExistingTitle && postTitleToUse) {
+		postTitle.value = postTitleToUse
 		postTitle.dispatchEvent(new Event('input'))
 	}
 
@@ -108,17 +113,12 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 				if (newlyCreatedRow.length) {
 					newlyCreatedRow = newlyCreatedRow[0]
 
-					// If postTitle is already filled and datafield 225 (series title) matches the postTitle,
-					// fill the volume_title field with the book title
-					if (hasExistingTitle && fetchedDatas.seriesTitle && fetchedDatas.title) {
-						const postTitleValue = postTitle.value.trim()
-						const seriesTitleValue = fetchedDatas.seriesTitle.trim()
+					const shouldFillVolumeTitle = Boolean(seriesTitle && volumeTitle && !XMLUtils.titlesMatch(volumeTitle, seriesTitle) && (!hasExistingTitle || XMLUtils.titlesMatch(postTitle.value, seriesTitle)))
 
-						if (postTitleValue === seriesTitleValue) {
-							const volumeTitleField = newlyCreatedRow.querySelector('.acf-field[data-name="volume_title"] input[type="text"]')
-							if (volumeTitleField && !volumeTitleField.value.length) {
-								volumeTitleField.value = fetchedDatas.title
-							}
+					if (shouldFillVolumeTitle) {
+						const volumeTitleField = newlyCreatedRow.querySelector('.acf-field[data-name="volume_title"] input[type="text"]')
+						if (volumeTitleField && !volumeTitleField.value.length) {
+							volumeTitleField.value = volumeTitle
 						}
 					}
 
