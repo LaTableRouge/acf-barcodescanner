@@ -25,6 +25,30 @@ export class XMLUtils {
 	}
 
 	/**
+	 * Get all text contents for a datafield tag + subfield code
+	 * @param {NodeList|Array} datafields - Collection of datafield elements
+	 * @param {string} tag - The datafield tag number
+	 * @param {string} code - The subfield code
+	 * @returns {string[]} Matching subfield values
+	 */
+	static getAllSubfieldTexts(datafields, tag, code) {
+		const values = []
+		const fields = this.getAllDatafieldsByTag(datafields, tag)
+		for (const field of fields) {
+			const subfields = field.getElementsByTagName('mxc:subfield')
+			for (let j = 0; j < subfields.length; j++) {
+				if (subfields[j].getAttribute('code') === code) {
+					const text = subfields[j].textContent.trim()
+					if (text) {
+						values.push(text)
+					}
+				}
+			}
+		}
+		return values
+	}
+
+	/**
 	 * Get multiple subfields from a datafield and concatenate them
 	 * @param {NodeList|Array} datafields - Collection of datafield elements
 	 * @param {string} tag - The datafield tag number
@@ -86,20 +110,223 @@ export class XMLUtils {
 	}
 
 	/**
+	 * Strip hyphens/spaces from an ISBN, EAN or commercial number
+	 * @param {string} value
+	 * @returns {string}
+	 */
+	static normalizeIdentifier(value) {
+		return String(value || '')
+			.replace(/[^\dX]/gi, '')
+			.toUpperCase()
+	}
+
+	/**
+	 * Comparable ISBN core (9 digits) for ISBN-10 / ISBN-13-978 matching
+	 * @param {string} digits - Normalized identifier
+	 * @returns {string}
+	 */
+	static isbnComparableCore(digits) {
+		if (digits.length === 13 && digits.startsWith('978')) {
+			return digits.slice(3, 12)
+		}
+		if (digits.length === 10) {
+			return digits.slice(0, 9)
+		}
+		return digits
+	}
+
+	/**
+	 * Whether two identifiers refer to the same ISBN/EAN
+	 * @param {string} left
+	 * @param {string} right
+	 * @returns {boolean}
+	 */
+	static identifiersMatch(left, right) {
+		const leftDigits = this.normalizeIdentifier(left)
+		const rightDigits = this.normalizeIdentifier(right)
+		if (!leftDigits || !rightDigits) {
+			return false
+		}
+		if (leftDigits === rightDigits) {
+			return true
+		}
+		const leftCore = this.isbnComparableCore(leftDigits)
+		const rightCore = this.isbnComparableCore(rightDigits)
+		return Boolean(leftCore) && leftCore === rightCore
+	}
+
+	/**
+	 * Collect ISBN / EAN / commercial numbers from a UNIMARC record
+	 * @param {NodeList|Array} datafields
+	 * @returns {string[]}
+	 */
+	static collectRecordIdentifiers(datafields) {
+		return ['073', '010', '071'].flatMap((tag) => this.getAllSubfieldTexts(datafields, tag, 'a'))
+	}
+
+	/**
+	 * Whether a record's identifiers match the scanned barcode
+	 * @param {NodeList|Array} datafields
+	 * @param {string} barcode
+	 * @returns {boolean}
+	 */
+	static recordMatchesBarcode(datafields, barcode) {
+		return this.collectRecordIdentifiers(datafields).some((identifier) => this.identifiersMatch(identifier, barcode))
+	}
+
+	/**
+	 * Last modification date from extraRecordData (YYYYMMDD)
+	 * @param {Element} recordElement
+	 * @returns {string}
+	 */
+	static getLastModificationDate(recordElement) {
+		const extraRecordData = recordElement.getElementsByTagName('srw:extraRecordData')[0]
+		if (!extraRecordData) {
+			return ''
+		}
+
+		const attrs = extraRecordData.getElementsByTagName('ixm:attr')
+		for (let i = 0; i < attrs.length; i++) {
+			if (attrs[i].getAttribute('name') === 'LastModificationDate') {
+				return attrs[i].textContent.trim()
+			}
+		}
+		return ''
+	}
+
+	/**
+	 * Pick the record whose identifiers match the barcode; prefer the most recently modified
+	 * @param {NodeList|Array} recordElements
+	 * @param {string} barcode
+	 * @returns {Element|null}
+	 */
+	static selectBestRecord(recordElements, barcode) {
+		const records = Array.from(recordElements)
+		if (records.length === 0) {
+			return null
+		}
+
+		const scored = records.map((record, index) => {
+			const datafields = record.getElementsByTagName('mxc:datafield')
+			return {
+				index,
+				lastMod: this.getLastModificationDate(record),
+				matches: this.recordMatchesBarcode(datafields, barcode),
+				record
+			}
+		})
+
+		scored.sort((a, b) => {
+			if (a.matches !== b.matches) {
+				return a.matches ? -1 : 1
+			}
+			if (a.lastMod !== b.lastMod) {
+				return b.lastMod.localeCompare(a.lastMod)
+			}
+			return a.index - b.index
+		})
+
+		return scored[0].record
+	}
+
+	/**
 	 * Extract title from field 200 with all relevant subfields
 	 * UNIMARC field 200 can have: $a (title), $e (subtitle), $h (part number), $i (part name)
 	 * @param {NodeList|Array} datafields - Collection of datafield elements
 	 * @returns {string} Full title or empty string
 	 */
 	static extractTitle(datafields) {
-		// Try to get complete title with subtitle and parts
 		const title = this.getSubfieldTextMultiple(datafields, '200', ['a', 'e', 'h', 'i'], ' : ')
 		if (title) {
 			return title
 		}
 
-		// Fallback to just main title
 		return this.getSubfieldText(datafields, '200', 'a')
+	}
+
+	/**
+	 * Album / volume title from 200, without the part number ($h)
+	 * Repeated $a (common for BD) are kept, $b (GMD like "Texte imprimé") is ignored
+	 * @param {NodeList|Array} datafields
+	 * @returns {string}
+	 */
+	static extractVolumeTitle(datafields) {
+		const title = this.getSubfieldTextMultiple(datafields, '200', ['a', 'e', 'i'], ' : ')
+		return this.cleanDisplayTitle(title || this.getSubfieldText(datafields, '200', 'a'))
+	}
+
+	/**
+	 * Strip trailing dots and collapse whitespace for display
+	 * @param {string} value
+	 * @returns {string}
+	 */
+	static cleanDisplayTitle(value) {
+		return String(value || '')
+			.replace(/[.]+$/g, '')
+			.replace(/\s+/g, ' ')
+			.trim()
+	}
+
+	/**
+	 * Compare titles ignoring trailing punctuation and case
+	 * @param {string} left
+	 * @param {string} right
+	 * @returns {boolean}
+	 */
+	static titlesMatch(left, right) {
+		const normalize = (value) =>
+			this.cleanDisplayTitle(value)
+				.replace(/[.,;:!?]+$/g, '')
+				.toLowerCase()
+		const leftNormalized = normalize(left)
+		const rightNormalized = normalize(right)
+		return Boolean(leftNormalized) && leftNormalized === rightNormalized
+	}
+
+	/**
+	 * Volume / part number: 461$v (set), 200$h (part), 225$v / 410$v (series)
+	 * @param {NodeList|Array} datafields
+	 * @returns {string}
+	 */
+	static extractVolumeNumber(datafields) {
+		const candidates = [this.getSubfieldText(datafields, '461', 'v'), this.getSubfieldText(datafields, '200', 'h'), this.getSubfieldText(datafields, '225', 'v'), this.getSubfieldText(datafields, '410', 'v')]
+
+		for (const candidate of candidates) {
+			if (!candidate) {
+				continue
+			}
+			const numeric = candidate.match(/\d+/)
+			return numeric ? numeric[0] : candidate.trim()
+		}
+
+		return ''
+	}
+
+	/**
+	 * Series / set title used as the post title for BD and manga
+	 * Prefer 461 (work/set). Use 225 only when it has a volume number (not a publisher collection).
+	 * @param {NodeList|Array} datafields
+	 * @returns {string}
+	 */
+	static extractSeriesTitle(datafields) {
+		const setTitle = this.cleanDisplayTitle(this.getSubfieldText(datafields, '461', 't'))
+		if (setTitle) {
+			return setTitle
+		}
+
+		const seriesStatementVolume = this.getSubfieldText(datafields, '225', 'v')
+		const seriesStatementTitle = this.cleanDisplayTitle(this.getSubfieldText(datafields, '225', 'a'))
+		if (seriesStatementVolume && seriesStatementTitle) {
+			return seriesStatementTitle
+		}
+
+		const partNumber = this.getSubfieldText(datafields, '200', 'h')
+		const mainTitle = this.cleanDisplayTitle(this.getSubfieldText(datafields, '200', 'a'))
+		if (partNumber && mainTitle) {
+			return mainTitle
+		}
+
+		return ''
 	}
 
 	/**
@@ -145,12 +372,10 @@ export class XMLUtils {
 	 * @returns {string} Year as string or empty string
 	 */
 	static extractPublicationYear(datafields) {
-		// Try field 214$d (publication date) first, then 210$d
 		const dateFields = ['214', '210']
 		for (const fieldTag of dateFields) {
-			const dateStr = this.getSubfieldText(datafields, fieldTag, 'd')
-			if (dateStr) {
-				// Extract 4-digit year from strings like "impr. 2024", "2024", "c2024", etc.
+			const dateStrings = this.getAllSubfieldTexts(datafields, fieldTag, 'd')
+			for (const dateStr of dateStrings) {
 				const yearMatch = dateStr.match(/\b(19|20)\d{2}\b/)
 				if (yearMatch) {
 					const year = yearMatch[0]
@@ -189,45 +414,54 @@ export class XMLUtils {
 	 * Falls back to 200$f (statement of responsibility) if no author fields found
 	 * @param {NodeList|Array} datafields - Collection of datafield elements
 	 * @param {boolean} includeFallback - Whether to include fallback to 200$f (default: true)
-	 * @returns {string} Author name or empty string
+	 * @returns {string} Author names joined with commas, or empty string
 	 */
 	static extractAuthor(datafields, includeFallback = true) {
-		// Try personal name fields first (700, 701, 702)
+		const names = []
+		const seen = new Set()
+
+		const addName = (name) => {
+			const normalized = name.trim()
+			const key = normalized.toLowerCase()
+			if (normalized && !seen.has(key)) {
+				seen.add(key)
+				names.push(normalized)
+			}
+		}
+
 		const personalNameFields = ['700', '701', '702']
 		for (const fieldTag of personalNameFields) {
 			const authorFields = this.getAllDatafieldsByTag(datafields, fieldTag)
 			for (const field of authorFields) {
 				const surname = this.getSubfieldText([field], fieldTag, 'a')
 				const firstName = this.getSubfieldText([field], fieldTag, 'b')
-
 				if (surname || firstName) {
-					return this.formatPersonName(firstName, surname)
+					addName(this.formatPersonName(firstName, surname))
 				}
 			}
 		}
 
-		// Try corporate name fields (710, 711, 712)
-		const corporateNameFields = ['710', '711', '712']
-		for (const fieldTag of corporateNameFields) {
-			const authorFields = this.getAllDatafieldsByTag(datafields, fieldTag)
-			for (const field of authorFields) {
-				const name = this.getSubfieldText([field], fieldTag, 'a')
-				if (name) {
-					return name
+		if (names.length === 0) {
+			const corporateNameFields = ['710', '711', '712']
+			for (const fieldTag of corporateNameFields) {
+				const authorFields = this.getAllDatafieldsByTag(datafields, fieldTag)
+				for (const field of authorFields) {
+					const name = this.getSubfieldText([field], fieldTag, 'a')
+					if (name) {
+						addName(name)
+					}
 				}
 			}
 		}
 
-		// Fallback to statement of responsibility (200$f) if enabled
-		if (includeFallback) {
+		if (names.length === 0 && includeFallback) {
 			const statement = this.getSubfieldText(datafields, '200', 'f')
 			if (statement) {
-				// Clean up common prefixes like "par", "de", "[illustrations de]", etc.
-				return statement.replace(/^(\[.*?\]|par|de|par\s+)\s*/i, '').trim()
+				addName(statement.replace(/^(\[.*?\]|par|de|par\s+)\s*/i, ''))
 			}
 		}
 
-		return ''
+		return names.join(', ')
 	}
 
 	/**

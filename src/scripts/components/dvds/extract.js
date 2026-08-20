@@ -54,8 +54,7 @@ export function extractDVDData(datafields, recordElement, coverPageUrl) {
 	// Extract director/author
 	const director = extractDirector(datafields)
 
-	// Editor/Publisher from field 210$c
-	const editor = XMLUtils.getSubfieldText(datafields, '210', 'c')
+	const editor = XMLUtils.getSubfieldText(datafields, '214', 'c') || XMLUtils.getSubfieldText(datafields, '210', 'c')
 
 	// ID number from field 073$a (EAN/barcode) - this is the actual barcode number
 	const idNumber = XMLUtils.getSubfieldText(datafields, '073', 'a')

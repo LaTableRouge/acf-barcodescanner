@@ -13,15 +13,10 @@ export function extractCDData(datafields, recordElement, coverPageUrl) {
 	// Extract title with all subfields
 	const title = XMLUtils.extractTitle(datafields)
 
-	// Extract artist - for CDs, check performer fields (700-702) first, no fallback to 200$f
-	let artist = XMLUtils.extractAuthor(datafields, false)
-	if (!artist) {
-		// Fallback: try field 200$f (statement of responsibility)
-		artist = XMLUtils.getSubfieldText(datafields, '200', 'f')
-	}
+	const artist = XMLUtils.extractAuthor(datafields, true)
 
-	// ID number from field 071 (standard number for sound recordings)
-	const idNumber = XMLUtils.getSubfieldText(datafields, '071', 'a')
+	// Commercial number (071) then EAN (073)
+	const idNumber = XMLUtils.getSubfieldText(datafields, '071', 'a') || XMLUtils.getSubfieldText(datafields, '073', 'a')
 
 	// ISNI from field 710 (corporate name) subfield 'o' or field 700 (personal name) subfield 'o'
 	const isni = XMLUtils.getSubfieldText(datafields, '710', 'o') || XMLUtils.getSubfieldText(datafields, '700', 'o')

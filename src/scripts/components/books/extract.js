@@ -8,17 +8,13 @@ import { XMLUtils } from '../common/xml-utils'
  * @returns {Object} Extracted book data
  */
 export function extractBookData(datafields, recordElement, coverPageUrl) {
-	// Extract title with all subfields (main title, subtitle, parts)
-	const title = XMLUtils.extractTitle(datafields)
+	const title = XMLUtils.extractVolumeTitle(datafields)
 
 	// Extract author from proper author fields (700-702, 710-712) with fallback to 200$f
 	const author = XMLUtils.extractAuthor(datafields, true)
 
-	// Volume number from field 461 (series) or 225 (series statement)
-	const volumeNumber = XMLUtils.getSubfieldText(datafields, '461', 'v') || XMLUtils.getSubfieldText(datafields, '225', 'v')
-
-	// Series title from field 225 (series statement) subfield 'a'
-	const seriesTitle = XMLUtils.getSubfieldText(datafields, '461', 't')
+	const volumeNumber = XMLUtils.extractVolumeNumber(datafields)
+	const seriesTitle = XMLUtils.extractSeriesTitle(datafields)
 
 	// Editor/Publisher from field 214 or 210 (publication, distribution, etc.)
 	const editor = XMLUtils.getSubfieldText(datafields, '214', 'c') || XMLUtils.getSubfieldText(datafields, '210', 'c')
@@ -27,8 +23,7 @@ export function extractBookData(datafields, recordElement, coverPageUrl) {
 	const excerpt = XMLUtils.getSubfieldText(datafields, '330', 'a') || XMLUtils.getSubfieldText(datafields, '830', 'a')
 
 	// Physical dimensions from field 215 (physical description) or 280
-	const dimensionsRaw =
-		XMLUtils.getSubfieldText(datafields, '215', 'd') || XMLUtils.getSubfieldText(datafields, '280', 'd')
+	const dimensionsRaw = XMLUtils.getSubfieldText(datafields, '215', 'd') || XMLUtils.getSubfieldText(datafields, '280', 'd')
 	const dimensions = XMLUtils.parsePhysicalDimensions(dimensionsRaw)
 
 	// ISBN-13 is in field 073 subfield 'a', fallback to field 010 subfield 'a' for ISBN-10
