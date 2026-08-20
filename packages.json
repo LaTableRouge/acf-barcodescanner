@@ -1,0 +1,15 @@
+{
+    "packages": {
+        "latablerouge/acf-barcodescanner": {
+            "1.2.0": {
+                "name": "latablerouge/acf-barcodescanner",
+                "version": "1.2.0",
+                "type": "wordpress-plugin",
+                "dist": {
+                    "url": "https://github.com/LaTableRouge/acf-barcodescanner/releases/download/1.2.0/plugin-build.tar.gz",
+                    "type": "tar"
+                }
+            }
+        }
+    }
+}

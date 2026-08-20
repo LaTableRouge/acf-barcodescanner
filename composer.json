@@ -1,4 +1,6 @@
 {
+	"name": "latablerouge/acf-barcodescanner",
+	"type": "wordpress-plugin",
 	"authors": [
 		{
 			"name": "LaTableRouge",
