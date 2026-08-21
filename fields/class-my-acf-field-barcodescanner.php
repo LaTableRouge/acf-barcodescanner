@@ -20,6 +20,23 @@ if (!defined('ABSPATH')) {
  */
 class BarcodeScannerField extends \acf_field {
     /**
+     * Hosts allowed for the AJAX proxy (SSRF guard)
+     *
+     * @var list<string>
+     */
+    private const ALLOWED_REMOTE_HOSTS = [
+        'api.themoviedb.org',
+        'catalogue.bnf.fr',
+        'coverartarchive.org',
+        'covers.openlibrary.org',
+        'image.tmdb.org',
+        'musicbrainz.org',
+        'openlibrary.org',
+    ];
+
+    private const USER_AGENT = 'acf-barcodescanner/1.3.0 (https://github.com/LaTableRouge/acf-barcodescanner)';
+
+    /**
      * Plugin URL for assets
      *
      * @var string
@@ -60,7 +77,6 @@ class BarcodeScannerField extends \acf_field {
 
         // Initialize parent class (required by ACF)
         // MUST be called AFTER setting name, label, and category
-        /** @phpstan-ignore-next-line */
         parent::__construct();
 
         // Register AJAX handlers
@@ -78,47 +94,31 @@ class BarcodeScannerField extends \acf_field {
      * @return never Exits script execution after sending response.
      */
     public function fetch_from_barcode(): void {
-        // Validate and sanitize URL parameter
         if (!isset($_GET['url']) || !is_string($_GET['url'])) {
             wp_send_json_error(['message' => __('Invalid URL parameter', 'acf-barcodescanner')]);
         }
 
         $url = sanitize_url($_GET['url']);
-        if (empty($url)) {
+        if (empty($url) || !$this->is_allowed_remote_url($url)) {
             wp_send_json_error(['message' => __('Invalid or empty URL', 'acf-barcodescanner')]);
         }
 
-        // Initialize cURL
-        $ch = curl_init($url);
-        if ($ch === false) {
+        $remote = $this->request_remote($url);
+        if ($remote === null) {
             wp_send_json_error(['message' => __('Failed to initialize cURL', 'acf-barcodescanner')]);
         }
 
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/xml'],
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS => 5,
-        ]);
-
-        $response = curl_exec($ch);
-        $error = curl_error($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        // Handle errors
-        if ($response === false || !empty($error)) {
-            wp_send_json_error(['message' => sprintf(__('CURL Error: %s', 'acf-barcodescanner'), $error)]);
+        if ($remote['error'] !== '') {
+            wp_send_json_error(['message' => sprintf(__('CURL Error: %s', 'acf-barcodescanner'), $remote['error'])]);
         }
 
-        if ($http_code >= 400) {
-            wp_send_json_error(['message' => sprintf(__('HTTP Error: %s', 'acf-barcodescanner'), $http_code)]);
+        if ($remote['status'] >= 400) {
+            wp_send_json_error(['message' => sprintf(__('HTTP Error: %s', 'acf-barcodescanner'), (string) $remote['status'])]);
         }
 
-        // Send XML response
-        header('Content-Type: application/xml; charset=utf-8');
-        echo $response;
+        $content_type = $remote['content_type'] !== '' ? $remote['content_type'] : 'text/plain; charset=utf-8';
+        header('Content-Type: ' . $content_type);
+        echo $remote['body'];
         wp_die();
     }
 
@@ -132,54 +132,20 @@ class BarcodeScannerField extends \acf_field {
      * @return never Exits script execution after sending response.
      */
     public function fetch_cover_from_url(): void {
-        // Validate and sanitize URL parameter
         if (!isset($_GET['url']) || !is_string($_GET['url'])) {
             wp_send_json_error(['message' => __('Invalid URL parameter', 'acf-barcodescanner')]);
         }
 
         $url = sanitize_url($_GET['url']);
-        if (empty($url)) {
+        if (empty($url) || !$this->is_allowed_remote_url($url)) {
             wp_send_json_error(['message' => __('Invalid or empty URL', 'acf-barcodescanner')]);
         }
 
-        // Load and parse HTML
-        $doc = new DOMDocument();
-        libxml_use_internal_errors(true);
-        $loaded = @$doc->loadHTMLFile($url);
-        libxml_clear_errors();
-
-        if (!$loaded) {
-            wp_send_json_error(['message' => __('Failed to load URL', 'acf-barcodescanner')]);
-        }
-
-        // Find cover image
-        $xpath = new DOMXPath($doc);
-        $imgs = $xpath->query('//img');
-        $cover = false;
-
-        if ($imgs !== false) {
-            foreach ($imgs as $img) {
-                if (!($img instanceof \DOMElement)) {
-                    continue;
-                }
-
-                $src = $img->getAttribute('src');
-                if (empty($src)) {
-                    continue;
-                }
-
-                if (str_contains($src, 'https://catalogue.bnf.fr/couverture')) {
-                    $cover = $src;
-                    break;
-                }
-            }
-        }
-
-        if (!$cover) {
+        $cover = $this->is_direct_cover_url($url) ? $url : $this->extract_bnf_cover_from_html($url);
+        if ($cover === '') {
             wp_send_json_error(['message' => __('Cover image not found', 'acf-barcodescanner')]);
         }
 
-        // Upload image to WordPress media library
         $wp_media_id = media_sideload_image($cover . '#.jpg', 0, null, 'id');
 
         if (is_wp_error($wp_media_id)) {
@@ -283,6 +249,11 @@ class BarcodeScannerField extends \acf_field {
             'acfbcs_params',
             [
                 'ajax_url' => admin_url('admin-ajax.php'),
+                // define('ACFBCS_TMDB_API_KEY', '…') in wp-config.php, or filter acfbcs_tmdb_api_key
+                'tmdb_api_key' => (string) apply_filters(
+                    'acfbcs_tmdb_api_key',
+                    defined('ACFBCS_TMDB_API_KEY') ? (string) constant('ACFBCS_TMDB_API_KEY') : ''
+                ),
             ]
         );
         wp_enqueue_script($scripts_handle);
@@ -303,5 +274,123 @@ class BarcodeScannerField extends \acf_field {
             'acf-barcodescanner',
             $this->lang_path
         );
+    }
+
+    /**
+     * Whether a URL host is allowed for outbound plugin requests
+     *
+     * @param string $url
+     */
+    private function is_allowed_remote_url(string $url): bool {
+        $host = wp_parse_url($url, PHP_URL_HOST);
+        if (!is_string($host) || $host === '') {
+            return false;
+        }
+
+        $host = strtolower($host);
+        foreach (self::ALLOWED_REMOTE_HOSTS as $allowed) {
+            if ($host === $allowed || str_ends_with($host, '.' . $allowed)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Direct image URLs that must not be parsed as HTML
+     *
+     * @param string $url
+     */
+    private function is_direct_cover_url(string $url): bool {
+        $host = strtolower((string) wp_parse_url($url, PHP_URL_HOST));
+        $path = (string) wp_parse_url($url, PHP_URL_PATH);
+
+        if (str_contains($url, 'catalogue.bnf.fr/couverture')) {
+            return true;
+        }
+        if (str_contains($host, 'covers.openlibrary.org')) {
+            return true;
+        }
+        if (str_contains($host, 'coverartarchive.org')) {
+            return true;
+        }
+        if (str_contains($host, 'image.tmdb.org')) {
+            return true;
+        }
+
+        return (bool) preg_match('/\.(jpe?g|png|webp|gif)(\?|$)/i', $path);
+    }
+
+    /**
+     * Scrape a BnF catalogue HTML page for the cover image URL
+     *
+     * @param string $url
+     */
+    private function extract_bnf_cover_from_html(string $url): string {
+        $doc = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $loaded = @$doc->loadHTMLFile($url);
+        libxml_clear_errors();
+
+        if (!$loaded) {
+            return '';
+        }
+
+        $xpath = new DOMXPath($doc);
+        $imgs = $xpath->query('//img');
+        if ($imgs === false) {
+            return '';
+        }
+
+        foreach ($imgs as $img) {
+            if (!($img instanceof \DOMElement)) {
+                continue;
+            }
+
+            $src = $img->getAttribute('src');
+            if ($src !== '' && str_contains($src, 'https://catalogue.bnf.fr/couverture')) {
+                return $src;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * HTTP GET with a required User-Agent (MusicBrainz)
+     *
+     * @param string $url
+     * @return array{body: string, content_type: string, error: string, status: int}|null
+     */
+    private function request_remote(string $url): ?array {
+        $ch = curl_init($url);
+        if ($ch === false) {
+            return null;
+        }
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Accept: */*',
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 5,
+            CURLOPT_USERAGENT => self::USER_AGENT,
+        ]);
+
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $content_type = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        curl_close($ch);
+
+        return [
+            'body' => is_string($response) ? $response : '',
+            'content_type' => is_string($content_type) ? $content_type : '',
+            'error' => ($response === false || $error !== '') ? $error : '',
+            'status' => $http_code,
+        ];
     }
 }

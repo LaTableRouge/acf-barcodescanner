@@ -20,6 +20,15 @@
     gap: 10px;
   }
 
+  .acfbcs__status {
+    display: block;
+    width: 100%;
+    margin: 0.5em 0 0;
+    color: #6c6c6c;
+    font-size: 0.9em;
+    text-align: center;
+  }
+
   .scanner__video-wrapper {
     position: relative;
     max-width: 100%;

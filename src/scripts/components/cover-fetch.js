@@ -6,9 +6,11 @@ export const coverfetch = async (pageurl) => {
 		url: pageurl
 	}
 
-	return await fetch(`${variables.ajaxURL}?${new URLSearchParams(phpQueryParams)}`)
-		.then(async (response) => {
-			return await response.json()
-		})
-		.catch(console.error)
+	try {
+		const response = await fetch(`${variables.ajaxURL}?${new URLSearchParams(phpQueryParams)}`)
+		return await response.json()
+	} catch (error) {
+		console.error(error)
+		return null
+	}
 }

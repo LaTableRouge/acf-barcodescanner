@@ -2,14 +2,14 @@ import { XMLUtils } from '../common/xml-utils'
 
 /**
  * Extract director from DVD datafields
- * Checks field 702 with role code 300 (director) or falls back to 200$f
+ * Checks field 700/702 with role code 300 (director) or falls back to 200$f
  * @param {NodeList|Array} datafields - Collection of datafield elements
  * @returns {string} Director name or empty string
  */
 function extractDirector(datafields) {
-	// Try to find director in field 702 with role code 300 (director)
-	const directorFields = XMLUtils.getAllDatafieldsByTag(datafields, '702')
+	const directorFields = [...XMLUtils.getAllDatafieldsByTag(datafields, '700'), ...XMLUtils.getAllDatafieldsByTag(datafields, '702')]
 	for (const field of directorFields) {
+		const tag = field.getAttribute('tag') || '702'
 		const subfields = field.getElementsByTagName('mxc:subfield')
 		let isDirector = false
 		for (let j = 0; j < subfields.length; j++) {
@@ -20,8 +20,8 @@ function extractDirector(datafields) {
 		}
 
 		if (isDirector) {
-			const surname = XMLUtils.getSubfieldText([field], '702', 'a')
-			const firstName = XMLUtils.getSubfieldText([field], '702', 'b')
+			const surname = XMLUtils.getSubfieldText([field], tag, 'a')
+			const firstName = XMLUtils.getSubfieldText([field], tag, 'b')
 
 			if (surname || firstName) {
 				return XMLUtils.formatPersonName(firstName, surname)
@@ -62,13 +62,7 @@ export function extractDVDData(datafields, recordElement, coverPageUrl) {
 	// Excerpt/Summary from field 330$a (summary) if available, otherwise skip
 	// Field 300$a contains bonus features and technical notes, not the movie summary
 	const excerpt = XMLUtils.getSubfieldText(datafields, '330', 'a')
-
-	// Extract year - prefer publication year from datafields, fallback to cataloging date
-	let year = XMLUtils.extractPublicationYear(datafields)
-	if (!year) {
-		const extraRecordData = recordElement.getElementsByTagName('srw:extraRecordData')[0]
-		year = XMLUtils.extractYear(extraRecordData)
-	}
+	const year = XMLUtils.extractRecordYear(datafields, recordElement)
 
 	return {
 		title,

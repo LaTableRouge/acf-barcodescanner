@@ -5,6 +5,5 @@ parameters:
     level: 5
     excludePaths:
         - ../vendor/*
-    ignoreErrors:
-        # Unreachable code after parent::__construct() - false positive
-        - '#Unreachable statement - code above always terminates#'
+    scanFiles:
+        - acf-field.php
