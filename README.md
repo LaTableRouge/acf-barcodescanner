@@ -58,7 +58,7 @@ flowchart TB
   Credits --> MergeDvds
   MergeDvds --> Fill
 
-  Fill --> Cover["AJAX: acfbcs_fetch_cover_from_url"]
+  Fill --> Cover
   Cover --> Media[WordPress media library]
 ```
 
