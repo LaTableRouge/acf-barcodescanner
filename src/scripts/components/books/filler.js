@@ -1,7 +1,7 @@
 import { __ } from '@wordpress/i18n'
 
+import { fillAcfTextByName, fillCoverIfNewPost, setValueIfEmpty } from '../common/fill-utils'
 import { XMLUtils } from '../common/xml-utils'
-import { coverfetch } from '../cover-fetch'
 
 const REPEATER_ROW_DELAY_MS = 100
 
@@ -15,14 +15,8 @@ function fillRepeaterRowNumbers(row, fieldValues) {
 		return
 	}
 	for (const [fieldName, value] of Object.entries(fieldValues)) {
-		if (value == null || value === '') {
-			continue
-		}
 		const input = row.querySelector(`.acf-field[data-name="${fieldName}"] input`)
-		if (input && !input.value.length) {
-			input.value = value
-			input.dispatchEvent(new Event('input'))
-		}
+		setValueIfEmpty(input, value, { dispatchInput: true })
 	}
 }
 
@@ -74,27 +68,11 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 	const hasExistingTitle = postTitle.value.length > 0
 	const seriesTitle = fetchedDatas.seriesTitle
 	const volumeTitle = fetchedDatas.title
-	const postTitleToUse = seriesTitle || volumeTitle
 
-	if (!hasExistingTitle && postTitleToUse) {
-		postTitle.value = postTitleToUse
-		postTitle.dispatchEvent(new Event('input'))
-	}
-
-	const postExcerpt = mainWrapper.querySelector('#excerpt')
-	if (postExcerpt && !postExcerpt.value.length && fetchedDatas.excerpt) {
-		postExcerpt.value = fetchedDatas.excerpt
-	}
-
-	const authorField = mainWrapper.querySelector('.acf-field[data-name*="_author"] .acf-input input[type="text"]')
-	if (authorField && !authorField.value.length && fetchedDatas.author) {
-		authorField.value = fetchedDatas.author
-	}
-
-	const editorField = mainWrapper.querySelector('.acf-field[data-name*="_editor"] .acf-input input[type="text"]')
-	if (editorField && !editorField.value.length && fetchedDatas.editor) {
-		editorField.value = fetchedDatas.editor
-	}
+	setValueIfEmpty(postTitle, seriesTitle || volumeTitle, { dispatchInput: true })
+	setValueIfEmpty(mainWrapper.querySelector('#excerpt'), fetchedDatas.excerpt)
+	fillAcfTextByName(mainWrapper, '_author', fetchedDatas.author)
+	fillAcfTextByName(mainWrapper, '_editor', fetchedDatas.editor)
 
 	const volumesInfosFieldWrapper = mainWrapper.querySelector('.acf-field[data-name*="_volumes-repeater"]')
 	if (volumesInfosFieldWrapper) {
@@ -116,26 +94,12 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 					const shouldFillVolumeTitle = Boolean(seriesTitle && volumeTitle && !XMLUtils.titlesMatch(volumeTitle, seriesTitle) && (!hasExistingTitle || XMLUtils.titlesMatch(postTitle.value, seriesTitle)))
 
 					if (shouldFillVolumeTitle) {
-						const volumeTitleField = newlyCreatedRow.querySelector('.acf-field[data-name="volume_title"] input[type="text"]')
-						if (volumeTitleField && !volumeTitleField.value.length) {
-							volumeTitleField.value = volumeTitle
-						}
+						setValueIfEmpty(newlyCreatedRow.querySelector('.acf-field[data-name="volume_title"] input[type="text"]'), volumeTitle)
 					}
 
-					const volumeNumberField = newlyCreatedRow.querySelector('.acf-field[data-name="volume_number"] input[type="number"]')
-					if (volumeNumberField && !volumeNumberField.value.length && fetchedDatas.volumeNumber) {
-						volumeNumberField.value = fetchedDatas.volumeNumber
-					}
-
-					const isbnField = newlyCreatedRow.querySelector('.acf-field[data-name="volume_isbn"] input[type="text"]')
-					if (isbnField && !isbnField.value.length && fetchedDatas.isbn) {
-						isbnField.value = fetchedDatas.isbn
-					}
-
-					const yearField = newlyCreatedRow.querySelector('.acf-field[data-name="volume_year"] input[type="text"]')
-					if (yearField && !yearField.value.length && fetchedDatas.year) {
-						yearField.value = fetchedDatas.year
-					}
+					setValueIfEmpty(newlyCreatedRow.querySelector('.acf-field[data-name="volume_number"] input[type="number"]'), fetchedDatas.volumeNumber)
+					setValueIfEmpty(newlyCreatedRow.querySelector('.acf-field[data-name="volume_isbn"] input[type="text"]'), fetchedDatas.isbn)
+					setValueIfEmpty(newlyCreatedRow.querySelector('.acf-field[data-name="volume_year"] input[type="text"]'), fetchedDatas.year)
 				}
 			}, REPEATER_ROW_DELAY_MS)
 		}
@@ -143,18 +107,6 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 
 	fillSizesRepeater(mainWrapper, fetchedDatas.dimensions)
 
-	const coverUrl = fetchedDatas.cover
-	let coverMessage = []
-	if (coverUrl && !hasExistingTitle) {
-		try {
-			const coverResponse = await coverfetch(coverUrl)
-			if (coverResponse?.data?.message) {
-				coverMessage.push(coverResponse.data.message)
-			}
-		} catch (error) {
-			console.error('Error fetching cover:', error)
-		}
-	}
-
+	const coverMessage = await fillCoverIfNewPost(hasExistingTitle, fetchedDatas.cover)
 	return [__('Data filled successfully', 'acf-barcodescanner'), ...coverMessage]
 }

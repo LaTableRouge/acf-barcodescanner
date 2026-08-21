@@ -1,17 +1,17 @@
 # Advanced Custom Fields: Barcode Scanner
 
 A WordPress plugin that adds a barcode scanner field type to Advanced Custom Fields (ACF),
-allowing users to scan barcodes and automatically fetch related data,
-particularly useful for book cataloging with BNF (Bibliothèque nationale de France) integration.
+allowing users to scan barcodes and automatically fetch related data for books, comics,
+CDs, and DVDs.
 
 ## Description
 
 This plugin extends ACF by adding a custom field type that enables barcode scanning functionality. When a barcode is scanned, the plugin can:
 
-- Fetch XML data from external APIs based on the scanned barcode
-- Automatically retrieve book cover images from BNF catalogue
-- Upload cover images directly to WordPress media library
-- Fill ACF fields with book information
+- Query bibliographic APIs (BnF, Open Library, MusicBrainz, TMDB) through a WordPress AJAX proxy
+- Merge results so a fallback only fills empty fields
+- Upload cover images to the WordPress media library
+- Fill ACF fields with title, excerpt, authors, identifiers, and related metadata
 
 Perfect for libraries, bookstores, or any WordPress site that needs to catalog items by barcode.
 
@@ -20,10 +20,59 @@ Perfect for libraries, bookstores, or any WordPress site that needs to catalog i
 ## Features
 
 - 📱 **Barcode Scanner Field**: Custom ACF field type with scanner interface
-- 📚 **BNF Integration**: Automatic book cover image fetching from Bibliothèque nationale de France
-- 🖼️ **Media Library Integration**: Automatically uploads cover images to WordPress
-- 🌐 **AJAX-powered**: Fast, asynchronous data fetching
+- 📚 **Books / mangas / BDs**: BnF SRU first; Open Library only if BnF has no résumé
+- 💿 **CDs**: MusicBrainz + Cover Art Archive first; BnF fills empty fields (ISNI, résumé, …)
+- 📀 **DVDs**: BnF SRU first; TMDB search (and credits if BnF has no director) when an API key is set
+- 🖼️ **Media Library Integration**: Sideloads cover images from BnF, Open Library, Cover Art Archive, or TMDB
+- 🌐 **AJAX-powered**: Browser never calls third-party APIs directly
 - 🌍 **i18n Ready**: Translation-ready with text domain support
+
+## How APIs interact
+
+Every remote call goes through WordPress (`admin-ajax.php`). The browser only talks to two actions: data fetch and cover sideload.
+
+```mermaid
+flowchart TB
+  Scan[Scan barcode] --> Type{Post type}
+
+  Type -->|books / mangas / bds| BnFBooks[BnF SRU]
+  BnFBooks -->|excerpt found| Fill[Fill ACF fields]
+  BnFBooks -->|excerpt empty| OL[Open Library]
+  OL --> MergeBooks[mergeRecords]
+  BnFBooks -.-> MergeBooks
+  MergeBooks --> Fill
+
+  Type -->|cds| MB[MusicBrainz]
+  MB --> CAA[Cover Art Archive]
+  MB --> BnFCds[BnF SRU]
+  CAA --> MergeCds[mergeRecords]
+  BnFCds --> MergeCds
+  MergeCds --> Fill
+
+  Type -->|dvds| BnFDvds[BnF SRU]
+  BnFDvds -->|no TMDB key or no title| Fill
+  BnFDvds -->|title + API key| TMDB[TMDB search]
+  TMDB -->|BnF has no director| Credits[TMDB credits]
+  BnFDvds --> MergeDvds[mergeRecords]
+  TMDB --> MergeDvds
+  Credits --> MergeDvds
+  MergeDvds --> Fill
+
+  Fill --> Cover["AJAX: acfbcs_fetch_cover_from_url"]
+  Cover --> Media[WordPress media library]
+```
+
+`mergeRecords` never overwrites a field that already has a value. Covers are uploaded only when the post title was empty (new post).
+
+### What each API contributes
+
+- **BnF SRU** (`catalogue.bnf.fr`): UNIMARC records — title, authors, publisher, résumé, identifiers, dimensions, BnF cover page URL
+- **Open Library**: title, description, cover JPEG when BnF has no excerpt
+- **MusicBrainz**: album title, artists, barcode, year, tracklist
+- **Cover Art Archive**: CD front cover (tied to the MusicBrainz release)
+- **TMDB**: plot, poster, year; director only when BnF did not provide one
+
+The PHP proxy only allows those hosts (SSRF guard). BnF HTML covers are still scraped from `catalogue.bnf.fr/couverture`; other covers are downloaded from the image URL directly.
 
 ## Requirements
 
@@ -92,10 +141,10 @@ npm run watch
 
 ### AJAX Endpoints
 
-The plugin provides two AJAX endpoints:
+The plugin provides two AJAX endpoints (admin only):
 
-- `acfbcs_fetch_from_barcode`: Fetches XML data from a barcode URL
-- `acfbcs_fetch_cover_from_url`: Fetches and uploads book cover images
+- `acfbcs_fetch_from_barcode`: Proxies an allowlisted URL and returns JSON or XML as text
+- `acfbcs_fetch_cover_from_url`: Downloads a cover and uploads it to the media library
 
 ## Development
 
@@ -107,6 +156,7 @@ acf-barcodescanner/
 │   └── class-my-acf-field-barcodescanner.php  # Main field class
 ├── src/
 │   ├── scripts/                               # JavaScript source files
+│   │   └── components/providers/              # BnF, Open Library, MusicBrainz, TMDB
 │   └── styles/                                # SCSS source files
 ├── build/                                     # Compiled assets (generated)
 ├── lang/                                      # Translation files
@@ -152,6 +202,18 @@ The project uses:
 
 ## Customization
 
+### TMDB (DVDs)
+
+TMDB is optional. Without a key, DVDs still fill from BnF only.
+
+In `wp-config.php`:
+
+```php
+define('ACFBCS_TMDB_API_KEY', 'your-tmdb-api-key');
+```
+
+Or with the `acfbcs_tmdb_api_key` filter.
+
 ### Translation (i18n)
 
 **Generate .pot file (from the plugin's directory):**
@@ -183,10 +245,9 @@ wp i18n make-json lang/ --no-purge
 
 ### Cover Images Not Loading
 
-- Verify the BNF catalogue URL is accessible
-- Check that the image URL pattern matches: `https://catalogue.bnf.fr/couverture`
+- Confirm the cover host is allowlisted (BnF, Open Library, Cover Art Archive, TMDB)
+- For BnF catalogue pages, the image URL should match `https://catalogue.bnf.fr/couverture`
 - Ensure WordPress media library has write permissions
--
 
 ## Support
 
@@ -197,4 +258,5 @@ For issues, feature requests, or contributions, please open an issue on the [Git
 - Built with [Advanced Custom Fields](https://www.advancedcustomfields.com/)
 - Uses [barcode-detection-api-demo](https://github.com/tony-xlh/barcode-detection-api-demo/blob/main/scanner.js)
 - Uses [SweetAlert2](https://sweetalert2.github.io/) for UI components
-- Integrates with [Bibliothèque nationale de France](https://www.bnf.fr/) catalogue
+- Integrates with [Bibliothèque nationale de France](https://www.bnf.fr/) (SRU catalogue)
+- Integrates with [Open Library](https://openlibrary.org/), [MusicBrainz](https://musicbrainz.org/), [Cover Art Archive](https://coverartarchive.org/), and [TMDB](https://www.themoviedb.org/)

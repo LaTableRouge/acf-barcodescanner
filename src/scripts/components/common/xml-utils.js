@@ -390,6 +390,22 @@ export class XMLUtils {
 	}
 
 	/**
+	 * Publication year from 214/210, else cataloging date on the record
+	 * @param {NodeList|Array} datafields
+	 * @param {Element} recordElement
+	 * @returns {string}
+	 */
+	static extractRecordYear(datafields, recordElement) {
+		const year = this.extractPublicationYear(datafields)
+		if (year) {
+			return year
+		}
+
+		const extraRecordData = recordElement?.getElementsByTagName('srw:extraRecordData')[0]
+		return this.extractYear(extraRecordData)
+	}
+
+	/**
 	 * Format a person's name from first name and surname
 	 * @param {string} firstName - First name
 	 * @param {string} surname - Surname

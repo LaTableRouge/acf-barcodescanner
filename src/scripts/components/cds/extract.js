@@ -3,6 +3,26 @@ import { __ } from '@wordpress/i18n'
 import { XMLUtils } from '../common/xml-utils'
 
 /**
+ * @param {string} description
+ * @param {string[]} tracks
+ * @returns {string}
+ */
+export function formatCdExcerpt(description = '', tracks = []) {
+	const parts = []
+	const summary = String(description || '').trim()
+	if (summary) {
+		parts.push(summary)
+	}
+
+	if (tracks.length) {
+		const lines = tracks.map((title, index) => `${index + 1}. ${title}`)
+		parts.push(`${__('Tracklist:', 'acf-barcodescanner')}\n${lines.join('\n')}`)
+	}
+
+	return parts.join('\n\n')
+}
+
+/**
  * Extract CD data from XML
  * @param {NodeList|Array} datafields - Collection of datafield elements
  * @param {Element} recordElement - The record element
@@ -10,21 +30,16 @@ import { XMLUtils } from '../common/xml-utils'
  * @returns {Object} Extracted CD data
  */
 export function extractCDData(datafields, recordElement, coverPageUrl) {
-	// Extract title with all subfields
 	const title = XMLUtils.extractTitle(datafields)
 
 	const artist = XMLUtils.extractAuthor(datafields, true)
 
-	// Commercial number (071) then EAN (073)
 	const idNumber = XMLUtils.getSubfieldText(datafields, '071', 'a') || XMLUtils.getSubfieldText(datafields, '073', 'a')
 
-	// ISNI from field 710 (corporate name) subfield 'o' or field 700 (personal name) subfield 'o'
 	const isni = XMLUtils.getSubfieldText(datafields, '710', 'o') || XMLUtils.getSubfieldText(datafields, '700', 'o')
 
-	// Physical dimensions from field 215
 	const height = XMLUtils.getSubfieldText(datafields, '215', 'd')
 
-	// Extracting tracklist from field 464 (analytical entry for sound recording)
 	const tracklist = []
 	const trackFields = XMLUtils.getAllDatafieldsByTag(datafields, '464')
 	for (const field of trackFields) {
@@ -39,23 +54,28 @@ export function extractCDData(datafields, recordElement, coverPageUrl) {
 		}
 	}
 
-	// Extract year - prefer publication year from datafields, fallback to cataloging date
-	let year = XMLUtils.extractPublicationYear(datafields)
-	if (!year) {
-		const extraRecordData = recordElement.getElementsByTagName('srw:extraRecordData')[0]
-		year = XMLUtils.extractYear(extraRecordData)
+	if (tracklist.length === 0) {
+		const contents = XMLUtils.getAllSubfieldTexts(datafields, '327', 'a')
+		for (const line of contents) {
+			if (line) {
+				tracklist.push(line)
+			}
+		}
 	}
 
+	const year = XMLUtils.extractRecordYear(datafields, recordElement)
+
 	return {
-		title,
 		artist,
-		idNumber,
-		isni,
+		cover: coverPageUrl,
 		dimensions: {
 			height
 		},
-		excerpt: tracklist.length ? `${__('Tracklist:', 'acf-barcodescanner')} ${tracklist.join(', ')}` : '',
-		year,
-		cover: coverPageUrl
+		excerpt: XMLUtils.getSubfieldText(datafields, '330', 'a'),
+		idNumber,
+		isni,
+		title,
+		tracklist,
+		year
 	}
 }

@@ -4,11 +4,34 @@ import { __ } from '@wordpress/i18n'
 // import eruda from 'eruda'
 import Swal from 'sweetalert2'
 
+import { BOOKS_POST_TYPES } from './scripts/common/constants'
 import { barcodeScanner } from './scripts/components/barcode-scanner'
 import { booksFieldsFiller } from './scripts/components/books/filler'
 import { cdsFieldsFiller } from './scripts/components/cds/filler'
 import { dvdsFieldsFiller } from './scripts/components/dvds/filler'
 import { mediasfetch } from './scripts/components/medias-fetch'
+
+function setPopupStatus(message) {
+	const popup = Swal.getPopup()
+	if (!popup) {
+		return
+	}
+
+	let status = popup.querySelector('.acfbcs__status')
+	if (!status) {
+		status = document.createElement('p')
+		status.className = 'acfbcs__status'
+		status.setAttribute('aria-live', 'polite')
+		const title = popup.querySelector('#swal2-title')
+		if (title) {
+			title.after(status)
+		} else {
+			popup.prepend(status)
+		}
+	}
+
+	status.textContent = message
+}
 
 // Mobile debug helper
 // const el = document.createElement('div')
@@ -68,13 +91,13 @@ function initField($field) {
               </div>
           </div>`,
 					preConfirm: async (barcode) => {
-						const fetchedDatas = await mediasfetch(barcode, postType)
+						const fetchedDatas = await mediasfetch(barcode, postType, setPopupStatus)
 
 						if (fetchedDatas) {
-							const booksPostTypes = ['mangas', 'books', 'bds']
 							let messages = []
 							try {
-								if (booksPostTypes.includes(postType)) {
+								setPopupStatus(__('Filling in the fields…', 'acf-barcodescanner'))
+								if (BOOKS_POST_TYPES.includes(postType)) {
 									messages = (await booksFieldsFiller(mainWrapper, fetchedDatas)) || []
 								} else if (postType === 'cds') {
 									messages = (await cdsFieldsFiller(mainWrapper, fetchedDatas)) || []

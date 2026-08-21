@@ -28,13 +28,7 @@ export function extractBookData(datafields, recordElement, coverPageUrl) {
 
 	// ISBN-13 is in field 073 subfield 'a', fallback to field 010 subfield 'a' for ISBN-10
 	const isbn = XMLUtils.getSubfieldText(datafields, '073', 'a') || XMLUtils.getSubfieldText(datafields, '010', 'a')
-
-	// Extract year - prefer publication year from datafields, fallback to cataloging date
-	let year = XMLUtils.extractPublicationYear(datafields)
-	if (!year) {
-		const extraRecordData = recordElement.getElementsByTagName('srw:extraRecordData')[0]
-		year = XMLUtils.extractYear(extraRecordData)
-	}
+	const year = XMLUtils.extractRecordYear(datafields, recordElement)
 
 	return {
 		title,
