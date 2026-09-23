@@ -10,16 +10,7 @@ function extractDirector(datafields) {
 	const directorFields = [...XMLUtils.getAllDatafieldsByTag(datafields, '700'), ...XMLUtils.getAllDatafieldsByTag(datafields, '702')]
 	for (const field of directorFields) {
 		const tag = field.getAttribute('tag') || '702'
-		const subfields = field.getElementsByTagName('mxc:subfield')
-		let isDirector = false
-		for (let j = 0; j < subfields.length; j++) {
-			if (subfields[j].getAttribute('code') === '4' && subfields[j].textContent.trim() === '300') {
-				isDirector = true
-				break
-			}
-		}
-
-		if (isDirector) {
+		if (XMLUtils.getAllSubfieldTexts([field], tag, '4').includes('300')) {
 			const surname = XMLUtils.getSubfieldText([field], tag, 'a')
 			const firstName = XMLUtils.getSubfieldText([field], tag, 'b')
 
@@ -54,7 +45,7 @@ export function extractDVDData(datafields, recordElement, coverPageUrl) {
 	// Extract director/author
 	const director = extractDirector(datafields)
 
-	const editor = XMLUtils.getSubfieldText(datafields, '214', 'c') || XMLUtils.getSubfieldText(datafields, '210', 'c')
+	const editor = XMLUtils.extractPublisher(datafields)
 
 	// ID number from field 073$a (EAN/barcode) - this is the actual barcode number
 	const idNumber = XMLUtils.getSubfieldText(datafields, '073', 'a')

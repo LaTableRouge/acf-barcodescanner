@@ -2,11 +2,11 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Advanced Custom Fields: Barcode scanner 1.0.0\n"
+"Project-Id-Version: Advanced Custom Fields: Barcode scanner 1.3.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/acf-"
 "barcodescanner\n"
-"POT-Creation-Date: 2025-12-04T12:44:44+00:00\n"
-"PO-Revision-Date: 2025-12-04 13:45+0100\n"
+"POT-Creation-Date: 2026-09-23T11:44:54+0200\n"
+"PO-Revision-Date: 2026-09-23 11:44+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -41,78 +41,91 @@ msgstr "Auteur : LaTableRouge"
 msgid "https://mlnop.fr"
 msgstr "https://mlnop.fr"
 
-#: fields/class-my-acf-field-barcodescanner.php:52
+#: fields/class-my-acf-field-barcodescanner.php:85
 msgid "Barcode scanner"
 msgstr "Scanneur de code barre"
 
-#: fields/class-my-acf-field-barcodescanner.php:83
-#: fields/class-my-acf-field-barcodescanner.php:137
-msgid "Invalid URL parameter"
-msgstr "Paramètre URL invalide"
-
-#: fields/class-my-acf-field-barcodescanner.php:88
-#: fields/class-my-acf-field-barcodescanner.php:142
-msgid "Invalid or empty URL"
-msgstr "URL invalide ou vide"
-
-#: fields/class-my-acf-field-barcodescanner.php:94
-msgid "Failed to initialize cURL"
-msgstr "Échec de l'initialisation de cURL"
-
-#: fields/class-my-acf-field-barcodescanner.php:112
-#, php-format
-msgid "CURL Error: %s"
-msgstr "Erreur CURL : %s"
-
-#: fields/class-my-acf-field-barcodescanner.php:116
-#, php-format
-msgid "HTTP Error: %s"
-msgstr "Erreur HTTP : %s"
-
-#: fields/class-my-acf-field-barcodescanner.php:152
-msgid "Failed to load URL"
-msgstr "Échec du chargement de l'URL"
-
-#: fields/class-my-acf-field-barcodescanner.php:179
+#: fields/class-my-acf-field-barcodescanner.php:134
 msgid "Cover image not found"
 msgstr "Image de couverture introuvable"
 
-#: fields/class-my-acf-field-barcodescanner.php:187
+#: fields/class-my-acf-field-barcodescanner.php:140
 #, php-format
 msgid "Error uploading image: %s"
 msgstr "Erreur lors du téléchargement de l'image : %s"
 
-#: fields/class-my-acf-field-barcodescanner.php:194
+#: fields/class-my-acf-field-barcodescanner.php:147
 msgid "Cover fetched and uploaded successfully"
 msgstr "Couverture récupérée et téléversée avec succès"
 
-#: fields/class-my-acf-field-barcodescanner.php:234
-#: fields/class-my-acf-field-barcodescanner.php:237
+#: fields/class-my-acf-field-barcodescanner.php:165 fields/class-my-acf-field-barcodescanner.php:168
 msgid "Scan"
 msgstr "Scanner"
 
-#: build/index.js:1
-msgid ""
-"Barcode Detector is not supported by this browser. You can try to type the "
-"barcode manually."
-msgstr ""
-"Le détecteur de code-barres n'est pas pris en charge par ce navigateur. Vous "
-"pouvez essayer de saisir le code-barres manuellement."
+#: fields/class-my-acf-field-barcodescanner.php:175 fields/class-my-acf-field-barcodescanner.php:179
+msgid "Check released volumes (BnF)"
+msgstr "Vérifier les tomes parus (BnF)"
+
+#: fields/class-my-acf-field-barcodescanner.php:264 includes/bnf-series.php:289
+msgid "You are not allowed to edit this post."
+msgstr "Vous n'avez pas le droit de modifier cette publication."
+
+#: fields/class-my-acf-field-barcodescanner.php:268
+msgid "Invalid URL parameter"
+msgstr "Paramètre URL invalide"
+
+#: fields/class-my-acf-field-barcodescanner.php:273
+msgid "Invalid or empty URL"
+msgstr "URL invalide ou vide"
+
+#: fields/class-my-acf-field-barcodescanner.php:377
+#, php-format
+msgid "Request error: %s"
+msgstr "Erreur de requête : %s"
+
+#: fields/class-my-acf-field-barcodescanner.php:382 includes/bnf-series.php:101
+#, php-format
+msgid "HTTP Error: %s"
+msgstr "Erreur HTTP : %s"
+
+#: includes/bnf-series.php:146 includes/bnf-series.php:156
+msgid "The BnF catalogue returned an invalid response."
+msgstr "Le catalogue de la BnF a renvoyé une réponse invalide."
+
+#: includes/bnf-series.php:296
+msgid "The post has no title."
+msgstr "La publication n'a pas de titre."
 
 #: build/index.js:1
-msgid "Data filled successfully"
-msgstr "Données saisies avec succès"
+msgid "Error"
+msgstr "Erreur"
 
 #: build/index.js:1
-msgid "Tracklist:"
-msgstr "Liste des chansons :"
+msgid "No data could be retrieved"
+msgstr "Aucune donnée n'a pu être récupérée."
 
 #: build/index.js:1
-msgid "Scannez un code barre"
+msgid "Filling in the fields…"
+msgstr "Remplissage des champs…"
+
+#: build/index.js:1
+msgid "Success"
+msgstr "Succès"
+
+#: build/index.js:1
+msgid "An error occurred while filling the fields"
+msgstr "Une erreur s'est produite lors du remplissage des champs."
+
+#: build/index.js:1
+msgid "Scan a barcode"
 msgstr "Scanner un code barre"
 
 #: build/index.js:1
-msgid "Récupérer les données"
+msgid "Close"
+msgstr "Fermer"
+
+#: build/index.js:1
+msgid "Fetch the data"
 msgstr "Récupérer les données"
 
 #: build/index.js:1
@@ -120,26 +133,83 @@ msgid "Start Scan"
 msgstr "Commencer le scan"
 
 #: build/index.js:1
-msgid "Success"
-msgstr "Succès"
+msgid "Barcode Detector is not supported by this browser. You can try to type the barcode manually."
+msgstr "Le détecteur de code-barres n'est pas pris en charge par ce navigateur. Vous pouvez essayer de saisir le code-barres manuellement."
 
 #: build/index.js:1
-msgid "Error"
-msgstr "Erreur"
+#, php-format
+msgid "Camera %d"
+msgstr "Caméra %d"
 
 #: build/index.js:1
-msgid "An error occurred while filling the fields"
-msgstr "Une erreur s'est produite lors du remplissage des champs."
+msgid "No camera detected."
+msgstr "Aucune caméra détectée."
 
 #: build/index.js:1
-msgid "No data could be retreived"
-msgstr "Aucune donnée n'a pu être récupérée."
+msgid "Data filled successfully"
+msgstr "Données saisies avec succès"
 
-#~ msgid "Empty response from server"
-#~ msgstr "Réponse vide du serveur"
+#: build/index.js:1
+msgid "The BnF catalogue could not be reached."
+msgstr "Le catalogue de la BnF est injoignable."
 
-#~ msgid "Error fetching media data:"
-#~ msgstr "Erreur lors de la récupération des données multimédia :"
+#: build/index.js:1
+msgid "No volume found in the BnF catalogue."
+msgstr "Aucun tome trouvé dans le catalogue de la BnF."
 
-#~ msgid "PLUGIN_URL"
-#~ msgstr "PLUGIN_URL"
+#: build/index.js:1
+#, php-format
+msgid "%d volumes found in the BnF catalogue."
+msgstr "%d tomes trouvés dans le catalogue de la BnF."
+
+#: build/index.js:1
+#, php-format
+msgid "Highest volume number: %d."
+msgstr "Numéro de tome le plus élevé : %d."
+
+#: build/index.js:1
+#, php-format
+msgid "Total volumes updated: %1$d → %2$d."
+msgstr "Nombre total de tomes mis à jour : %1$d → %2$d."
+
+#: build/index.js:1
+msgid "Save the post to keep it."
+msgstr "Enregistrez la publication pour le conserver."
+
+#: build/index.js:1
+#, php-format
+msgid "Total volumes unchanged (%d)."
+msgstr "Nombre total de tomes inchangé (%d)."
+
+#: build/index.js:1
+msgid "Searching the BnF catalogue…"
+msgstr "Recherche dans le catalogue de la BnF…"
+
+#: build/index.js:1
+msgid "Released volumes"
+msgstr "Tomes parus"
+
+#: build/index.js:1
+msgid "Tracklist:"
+msgstr "Liste des chansons :"
+
+#: build/index.js:1
+msgid "Checking Open Library…"
+msgstr "Recherche sur Open Library…"
+
+#: build/index.js:1
+msgid "Searching MusicBrainz…"
+msgstr "Recherche sur MusicBrainz…"
+
+#: build/index.js:1
+msgid "Completing with the BnF…"
+msgstr "Compléments depuis la BnF…"
+
+#: build/index.js:1
+msgid "Enriching with TMDB…"
+msgstr "Enrichissement via TMDB…"
+
+#: build/index.js:1
+#, php-format
+msgid "BnF: up to volume %d."
+msgstr "BnF : jusqu'au tome %d."

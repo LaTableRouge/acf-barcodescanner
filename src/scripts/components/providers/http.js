@@ -8,6 +8,7 @@ import { variables } from '../../common/variables'
 export async function fetchRemoteText(url) {
 	const phpQueryParams = {
 		action: 'acfbcs_fetch_from_barcode',
+		nonce: variables.nonce,
 		url
 	}
 

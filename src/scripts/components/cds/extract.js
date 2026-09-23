@@ -32,7 +32,7 @@ export function formatCdExcerpt(description = '', tracks = []) {
 export function extractCDData(datafields, recordElement, coverPageUrl) {
 	const title = XMLUtils.extractTitle(datafields)
 
-	const artist = XMLUtils.extractAuthor(datafields, true)
+	const artist = XMLUtils.extractAuthor(datafields)
 
 	const idNumber = XMLUtils.getSubfieldText(datafields, '071', 'a') || XMLUtils.getSubfieldText(datafields, '073', 'a')
 
@@ -40,28 +40,9 @@ export function extractCDData(datafields, recordElement, coverPageUrl) {
 
 	const height = XMLUtils.getSubfieldText(datafields, '215', 'd')
 
-	const tracklist = []
-	const trackFields = XMLUtils.getAllDatafieldsByTag(datafields, '464')
-	for (const field of trackFields) {
-		const subfields = field.getElementsByTagName('mxc:subfield')
-		for (let j = 0; j < subfields.length; j++) {
-			if (subfields[j].getAttribute('code') === 't') {
-				const trackTitle = subfields[j].textContent.trim()
-				if (trackTitle) {
-					tracklist.push(trackTitle)
-				}
-			}
-		}
-	}
-
-	if (tracklist.length === 0) {
-		const contents = XMLUtils.getAllSubfieldTexts(datafields, '327', 'a')
-		for (const line of contents) {
-			if (line) {
-				tracklist.push(line)
-			}
-		}
-	}
+	// Track titles from linked pieces (464$t), else the contents note (327$a)
+	const trackTitles = XMLUtils.getAllSubfieldTexts(datafields, '464', 't')
+	const tracklist = trackTitles.length ? trackTitles : XMLUtils.getAllSubfieldTexts(datafields, '327', 'a')
 
 	const year = XMLUtils.extractRecordYear(datafields, recordElement)
 

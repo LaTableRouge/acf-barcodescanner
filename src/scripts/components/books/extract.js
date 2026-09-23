@@ -11,13 +11,12 @@ export function extractBookData(datafields, recordElement, coverPageUrl) {
 	const title = XMLUtils.extractVolumeTitle(datafields)
 
 	// Extract author from proper author fields (700-702, 710-712) with fallback to 200$f
-	const author = XMLUtils.extractAuthor(datafields, true)
+	const author = XMLUtils.extractAuthor(datafields)
 
 	const volumeNumber = XMLUtils.extractVolumeNumber(datafields)
 	const seriesTitle = XMLUtils.extractSeriesTitle(datafields)
 
-	// Editor/Publisher from field 214 or 210 (publication, distribution, etc.)
-	const editor = XMLUtils.getSubfieldText(datafields, '214', 'c') || XMLUtils.getSubfieldText(datafields, '210', 'c')
+	const editor = XMLUtils.extractPublisher(datafields)
 
 	// Excerpt/Summary from field 330 (summary) or 830 (general note)
 	const excerpt = XMLUtils.getSubfieldText(datafields, '330', 'a') || XMLUtils.getSubfieldText(datafields, '830', 'a')

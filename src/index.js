@@ -7,9 +7,22 @@ import Swal from 'sweetalert2'
 import { BOOKS_POST_TYPES } from './scripts/common/constants'
 import { barcodeScanner } from './scripts/components/barcode-scanner'
 import { booksFieldsFiller } from './scripts/components/books/filler'
+import { seriesCount, seriesCountAfterScan } from './scripts/components/books/series-count'
 import { cdsFieldsFiller } from './scripts/components/cds/filler'
 import { dvdsFieldsFiller } from './scripts/components/dvds/filler'
 import { mediasfetch } from './scripts/components/medias-fetch'
+
+const fillBookFields = async (mainWrapper, fetchedDatas, postType) => [...(await booksFieldsFiller(mainWrapper, fetchedDatas)), ...(await seriesCountAfterScan(mainWrapper, postType, setPopupStatus))]
+
+/**
+ * Fill the form from fetched data, per post type. Each filler resolves to the messages to display.
+ * @type {Record<string, (mainWrapper: Element, fetchedDatas: Object, postType: string) => Promise<string[]>>}
+ */
+const FIELDS_FILLERS = {
+	...Object.fromEntries(BOOKS_POST_TYPES.map((postType) => [postType, fillBookFields])),
+	cds: cdsFieldsFiller,
+	dvds: dvdsFieldsFiller
+}
 
 function setPopupStatus(message) {
 	const popup = Swal.getPopup()
@@ -33,48 +46,76 @@ function setPopupStatus(message) {
 	status.textContent = message
 }
 
-// Mobile debug helper
-// const el = document.createElement('div')
-// document.body.appendChild(el)
+/**
+ * @param {string} barcode
+ * @param {string} postType
+ * @param {Element} mainWrapper - `form#post`
+ */
+async function fetchAndFill(barcode, postType, mainWrapper) {
+	const fillFields = FIELDS_FILLERS[postType]
+	if (!fillFields) {
+		return
+	}
 
-// eruda.init({
-//   container: el,
-//   tool: ['console', 'elements']
-// })
+	const fetchedDatas = await mediasfetch(barcode, postType, setPopupStatus)
+	if (!fetchedDatas) {
+		console.error('No data could be retrieved')
+		Swal.fire(__('Error', 'acf-barcodescanner'), __('No data could be retrieved', 'acf-barcodescanner'), 'error')
+		return
+	}
+
+	try {
+		setPopupStatus(__('Filling in the fields…', 'acf-barcodescanner'))
+		const messages = await fillFields(mainWrapper, fetchedDatas, postType)
+		Swal.fire(__('Success', 'acf-barcodescanner'), messages.join('<br>'), 'success')
+	} catch (error) {
+		console.error('Error filling fields:', error)
+		Swal.fire(__('Error', 'acf-barcodescanner'), __('An error occurred while filling the fields', 'acf-barcodescanner'), 'error')
+	}
+}
 
 function initField($field) {
 	const field = $field[0]
-	if (field) {
-		const postType = field.dataset.name.split('_')[0]
-		const mainWrapper = field.closest('form#post')
+	if (!field) {
+		return
+	}
 
-		const button = field.querySelector('.js-open-popup')
-		if (button) {
-			button.addEventListener('click', async (e) => {
-				e.preventDefault()
-				// const fetchedDatas = await booksfetch('0724387383814', 'dvds')
-				// console.log(fetchedDatas)
-				// dvdsFieldsFiller(mainWrapper, fetchedDatas)
+	const postType = field.dataset.name.split('_')[0]
+	const mainWrapper = field.closest('form#post')
 
-				Swal.fire({
-					title: __('Scannez un code barre', 'acf-barcodescanner'),
-					allowOutsideClick: false,
-					showCloseButton: true,
-					showCancelButton: false,
-					input: 'text',
-					inputAttributes: {
-						autocapitalize: 'off',
-						autocomplete: 'off'
-					},
-					customClass: {
-						popup: 'acfbcs__popup'
-					},
-					showLoaderOnConfirm: true,
-					confirmButtonText: __('Récupérer les données', 'acf-barcodescanner'),
-					didOpen: (wrapper) => {
-						barcodeScanner(wrapper)
-					},
-					html: /* html */ `
+	if (BOOKS_POST_TYPES.includes(postType)) {
+		seriesCount(field, mainWrapper, postType)
+	}
+
+	const button = field.querySelector('.js-open-popup')
+	if (!button) {
+		return
+	}
+
+	button.addEventListener('click', (e) => {
+		e.preventDefault()
+
+		let scanner = null
+		Swal.fire({
+			title: __('Scan a barcode', 'acf-barcodescanner'),
+			allowOutsideClick: false,
+			showCloseButton: true,
+			closeButtonAriaLabel: __('Close', 'acf-barcodescanner'),
+			input: 'text',
+			inputAttributes: {
+				autocapitalize: 'off',
+				autocomplete: 'off'
+			},
+			customClass: {
+				popup: 'acfbcs__popup'
+			},
+			showLoaderOnConfirm: true,
+			confirmButtonText: __('Fetch the data', 'acf-barcodescanner'),
+			didOpen: (wrapper) => {
+				scanner = barcodeScanner(wrapper)
+			},
+			willClose: () => scanner?.stop(),
+			html: /* html */ `
             <div class="acfbcs__scanner-wrapper">
               <div class="scanner-wrapper__choices">
                 <button id="startButton">${__('Start Scan', 'acf-barcodescanner')}</button>
@@ -90,50 +131,22 @@ function initField($field) {
                 </div>
               </div>
           </div>`,
-					preConfirm: async (barcode) => {
-						const fetchedDatas = await mediasfetch(barcode, postType, setPopupStatus)
-
-						if (fetchedDatas) {
-							let messages = []
-							try {
-								setPopupStatus(__('Filling in the fields…', 'acf-barcodescanner'))
-								if (BOOKS_POST_TYPES.includes(postType)) {
-									messages = (await booksFieldsFiller(mainWrapper, fetchedDatas)) || []
-								} else if (postType === 'cds') {
-									messages = (await cdsFieldsFiller(mainWrapper, fetchedDatas)) || []
-								} else if (postType === 'dvds') {
-									messages = (await dvdsFieldsFiller(mainWrapper, fetchedDatas)) || []
-								} else {
-									return null
-								}
-								Swal.fire(__('Success', 'acf-barcodescanner'), messages.join('<br>'), 'success')
-							} catch (error) {
-								console.error('Error filling fields:', error)
-								Swal.fire(__('Error', 'acf-barcodescanner'), __('An error occurred while filling the fields', 'acf-barcodescanner'), 'error')
-							}
-						} else {
-							Swal.fire(__('Error', 'acf-barcodescanner'), __('No data could be retreived', 'acf-barcodescanner'), 'error')
-							console.error('No data could be retreived')
-						}
-					}
-				})
-			})
-		}
-	}
+			preConfirm: (barcode) => {
+				scanner?.stop()
+				return fetchAndFill(barcode, postType, mainWrapper)
+			}
+		})
+	})
 }
 
 if (typeof acf.add_action !== 'undefined') {
 	/*
 	 *  ready & append (ACF5)
 	 *
-	 *  These two events are called when a field element is ready for initizliation.
+	 *  These two events are called when a field element is ready for initialization.
 	 *  - ready: on page load similar to $(document).ready()
 	 *  - append: on new DOM elements appended via repeater field or other AJAX calls
-	 *
-	 *  @paramn/a
-	 *  @returnn/a
 	 */
-
 	acf.add_action('ready_field/type=barcodescanner', initField)
 	acf.add_action('append_field/type=barcodescanner', initField)
 }

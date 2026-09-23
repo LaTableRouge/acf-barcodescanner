@@ -24,12 +24,13 @@ Perfect for libraries, bookstores, or any WordPress site that needs to catalog i
 - 💿 **CDs**: MusicBrainz + Cover Art Archive first; BnF fills empty fields (ISNI, résumé, …)
 - 📀 **DVDs**: BnF SRU first; TMDB search (and credits if BnF has no director) when an API key is set
 - 🖼️ **Media Library Integration**: Sideloads cover images from BnF, Open Library, Cover Art Archive, or TMDB
+- 🔢 **Released volumes (BnF)**: For ongoing books / mangas / BDs, counts the volumes in the BnF catalogue and raises `{post_type}_volumes-total`
 - 🌐 **AJAX-powered**: Browser never calls third-party APIs directly
 - 🌍 **i18n Ready**: Translation-ready with text domain support
 
 ## How APIs interact
 
-Every remote call goes through WordPress (`admin-ajax.php`). The browser only talks to two actions: data fetch and cover sideload.
+Every remote call goes through WordPress (`admin-ajax.php`). The browser only talks to three actions: data fetch, cover sideload and released volumes count.
 
 ```mermaid
 flowchart TB
@@ -67,6 +68,7 @@ flowchart TB
 ### What each API contributes
 
 - **BnF SRU** (`catalogue.bnf.fr`): UNIMARC records — title, authors, publisher, résumé, identifiers, dimensions, BnF cover page URL
+  - Books / mangas / BDs in a series: the publisher is the one shared by most volumes (one extra search on the series title)
 - **Open Library**: title, description, cover JPEG when BnF has no excerpt
 - **MusicBrainz**: album title, artists, barcode, year, tracklist
 - **Cover Art Archive**: CD front cover (tied to the MusicBrainz release)
@@ -78,8 +80,7 @@ The PHP proxy only allows those hosts (SSRF guard). BnF HTML covers are still sc
 
 - WordPress 5.0 or higher
 - Advanced Custom Fields (ACF) Pro 5.0+ or ACF Free 5.0+
-- PHP 7.4 or higher (PHP 8.0+ recommended)
-- cURL extension enabled (for API requests)
+- PHP 8.0 or higher
 - DOM extension enabled (for HTML parsing)
 
 ## Installation
@@ -139,12 +140,21 @@ npm run watch
    - A popup will open allowing you to scan a barcode
    - The plugin will automatically fetch data based on the scanned barcode
 
+### Checking released volumes
+
+On `books`, `mangas` and `bds`, a **Check released volumes (BnF)** button appears next to **Scan** while `{post_type}_status` is `ongoing`.
+
+- The search uses the post title and `{post_type}_editor`. Several publishers separated by commas (`Dargaud, le Lombard`) run one search each; volume numbers are merged.
+- Volume numbers come from UNIMARC `461`, then `225`, then `200`, with an exact match on the normalized series title. Hors-séries and decimal numbers are ignored.
+- The highest volume number found is written into `{post_type}_volumes-total` only when it is greater than the current value. Nothing is saved until you update the post.
+
 ### AJAX Endpoints
 
-The plugin provides two AJAX endpoints (admin only):
+The plugin provides three AJAX endpoints. All of them require the `acfbcs` nonce and the `edit_posts` capability:
 
 - `acfbcs_fetch_from_barcode`: Proxies an allowlisted URL and returns JSON or XML as text
 - `acfbcs_fetch_cover_from_url`: Downloads a cover and uploads it to the media library
+- `acfbcs_count_series_volumes` (POST, `edit_post` on `post_id`): Searches the BnF for `title` / `publisher` and returns `{ total, max, numbers, records, publishers }`
 
 ## Development
 
@@ -154,6 +164,8 @@ The plugin provides two AJAX endpoints (admin only):
 acf-barcodescanner/
 ├── fields/
 │   └── class-my-acf-field-barcodescanner.php  # Main field class
+├── includes/
+│   └── bnf-series.php                         # BnF released volumes count (AJAX)
 ├── src/
 │   ├── scripts/                               # JavaScript source files
 │   │   └── components/providers/              # BnF, Open Library, MusicBrainz, TMDB
@@ -214,6 +226,17 @@ define('ACFBCS_TMDB_API_KEY', 'your-tmdb-api-key');
 
 Or with the `acfbcs_tmdb_api_key` filter.
 
+### Publisher aliases
+
+Replace a catalogued publisher with its imprint (case-insensitive) when filling books / mangas / BDs:
+
+```php
+add_filter('acfbcs_publisher_aliases', fn (array $aliases): array => [
+    ...$aliases,
+    'IDP home video music' => 'Meian',
+]);
+```
+
 ### Translation (i18n)
 
 **Generate .pot file (from the plugin's directory):**
@@ -234,12 +257,12 @@ wp i18n make-json lang/ --no-purge
 
 - Ensure ACF is installed and activated
 - Check that the field type "Barcode scanner" appears in the field type dropdown
-- Verify PHP version is 7.4 or higher
+- Verify PHP version is 8.0 or higher
 
 ### AJAX Errors
 
 - Check browser console for JavaScript errors
-- Verify cURL is enabled in PHP
+- Reload the edit screen if the nonce expired (`-1` / 403 response)
 - Check WordPress AJAX URL is correct
 - Ensure proper permissions for media uploads
 
