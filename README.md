@@ -153,7 +153,7 @@ The names on the right are examples. Use the `data-name` of your own ACF fields 
 
 - A dot on the left reads a nested value (`dimensions.width`, `dimensions.height`).
 - `post_title` and `post_excerpt` are the WordPress title and excerpt.
-- `media` uploads the cover to the media library, only when the post title was empty.
+- `media` uploads the cover and selects it as the featured image, only when the post title was empty.
 - A line starting with `#` is a comment.
 - Only empty fields are written. Text, number, textarea and select are filled.
 
@@ -180,7 +180,9 @@ Mapping the repeater name alone (`isbn = editions`) does nothing: a row needs a 
 
 #### Series
 
-Books, mangas and BDs return two titles: `seriesTitle` (the series) and `title` (this volume), plus `volumeNumber`, `isbn` and `year`. Map them onto one repeater. Put `seriesTitle` before `title` when both target `post_title`, so the post is named after the series when the catalogue has one:
+Books, mangas and BDs return two titles: `seriesTitle` (the series) and `title` (this volume), plus `volumeNumber`, `isbn` and `year`.
+Map them onto one repeater.
+Put `seriesTitle` before `title` when both target `post_title`, so the post is named after the series when the catalogue has one:
 
 ```text
 seriesTitle = post_title
@@ -192,7 +194,8 @@ year = volumes.annee
 
 `volumes`, `tome`, `numero`, `isbn` and `annee` are your `data-name`s. Each scan appends one volume row.
 
-The mapping always writes `title` into the volume row when that key has a value. The built-in book filling, used when the textarea is empty, writes the volume title only when the series and the volume have different titles, and the post is new or already titled with the series.
+The mapping always writes `title` into the volume row when that key has a value.
+The built-in book filling, used when the textarea is empty, writes the volume title only when the series and the volume have different titles, and the post is new or already titled with the series.
 
 #### Keys you can map
 

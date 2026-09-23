@@ -52,7 +52,28 @@ export function appendRepeaterRow(repeaterField) {
 }
 
 /**
- * Sideload a cover only when creating a new post
+ * Show the uploaded attachment in the featured image box.
+ * @param {number|string|undefined} attachmentId
+ */
+function selectFeaturedImage(attachmentId) {
+	const id = Number(attachmentId)
+	if (!id) {
+		return
+	}
+
+	if (window.wp?.media?.featuredImage?.set) {
+		window.wp.media.featuredImage.set(id)
+		return
+	}
+
+	const input = document.querySelector('#_thumbnail_id')
+	if (input) {
+		input.value = String(id)
+	}
+}
+
+/**
+ * Sideload a cover only when creating a new post, then select it as the featured image.
  * @param {boolean} hasExistingTitle
  * @param {string} [coverUrl]
  * @returns {Promise<string[]>}
@@ -64,6 +85,7 @@ export async function fillCoverIfNewPost(hasExistingTitle, coverUrl) {
 
 	try {
 		const coverResponse = await coverfetch(coverUrl)
+		selectFeaturedImage(coverResponse?.data?.id)
 		return coverResponse?.data?.message ? [coverResponse.data.message] : []
 	} catch (error) {
 		console.error('Error fetching cover:', error)

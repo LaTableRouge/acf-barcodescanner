@@ -159,8 +159,9 @@ class BarcodeScannerField extends \acf_field {
     public function render_field_settings(array $field): void {
         acf_render_field_setting($field, [
             'label' => __('Fill mapping', 'acf-barcodescanner'),
-            'instructions' => __('One line per field: key = your data-name. A dot on the right is a repeater subfield (repeater.subfield): one scan adds one shared row. A dot on the left reads a nested value (dimensions.width). Also: post_title, post_excerpt, or media (uploads the cover on a new post). Lines starting with # are ignored. Leave empty to keep the built-in filling for books, CDs and DVDs. The field name must still start with the catalogue prefix: books_, mangas_, bds_, cds_ or dvds_.', 'acf-barcodescanner'),
+            'instructions' => __('One line per field: key = your data-name. A dot on the right is a repeater subfield (repeater.subfield): one scan adds one shared row. A dot on the left reads a nested value (dimensions.width). Also: post_title, post_excerpt, or media (uploads the cover and selects it as the featured image on a new post). Lines starting with # are ignored. Leave empty to keep the built-in filling for books, CDs and DVDs. The field name must still start with the catalogue prefix: books_, mangas_, bds_, cds_ or dvds_.', 'acf-barcodescanner'),
             'name' => 'fill_map',
+            // Example of the mapping syntax. The keys and post_title / media are not copy, so this stays untranslated.
             'placeholder' => "title = post_title\nauthor = writer\nisbn = editions.code\nyear = editions.published\ncover = media",
             'rows' => 12,
             'type' => 'textarea',
