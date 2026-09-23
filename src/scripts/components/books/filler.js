@@ -1,6 +1,4 @@
-import { __ } from '@wordpress/i18n'
-
-import { appendRepeaterRow, fillAcfTextByName, fillCoverIfNewPost, setValueIfEmpty } from '../common/fill-utils'
+import { appendRepeaterRow, fillAcfTextByName, fillCoverIfNewPost, filledMessages, setValueIfEmpty } from '../common/fill-utils'
 import { XMLUtils } from '../common/xml-utils'
 
 /**
@@ -81,6 +79,5 @@ export const booksFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 	await fillVolumesRepeater(mainWrapper, fetchedDatas, { hasExistingTitle, postTitle: postTitle.value })
 	await fillSizesRepeater(mainWrapper, fetchedDatas.dimensions)
 
-	const coverMessage = await fillCoverIfNewPost(hasExistingTitle, fetchedDatas.cover)
-	return [__('Data filled successfully', 'acf-barcodescanner'), ...coverMessage]
+	return filledMessages(await fillCoverIfNewPost(hasExistingTitle, fetchedDatas.cover))
 }

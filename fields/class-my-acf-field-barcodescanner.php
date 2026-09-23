@@ -19,6 +19,7 @@ if (!defined('ABSPATH')) {
  *
  * This class extends the ACF field base class to provide a barcode scanner field type
  * that allows users to scan barcodes and fetch related data.
+ * The Fill mapping setting links each fetched key to an ACF data-name.
  *
  * @since 5.0.0
  */
@@ -148,6 +149,26 @@ class BarcodeScannerField extends \acf_field {
     }
 
     /**
+     * Setting: map fetched keys to fields.
+     *
+     * One line is `key = target`. An empty value keeps the built-in fillers.
+     *
+     * @param array<string, mixed> $field The field being edited in the field group.
+     * @return void
+     */
+    public function render_field_settings(array $field): void {
+        acf_render_field_setting($field, [
+            'label' => __('Fill mapping', 'acf-barcodescanner'),
+            'instructions' => __('One line per field: key = your data-name. A dot on the right is a repeater subfield (repeater.subfield): one scan adds one shared row. A dot on the left reads a nested value (dimensions.width). Also: post_title, post_excerpt, or media (uploads the cover and selects it as the featured image on a new post). Lines starting with # are ignored. Leave empty to keep the built-in filling for books, CDs and DVDs. The field name must still start with the catalogue prefix: books_, mangas_, bds_, cds_ or dvds_.', 'acf-barcodescanner'),
+            'name' => 'fill_map',
+            // Example of the mapping syntax. The keys and post_title / media are not copy, so this stays untranslated.
+            'placeholder' => "title = post_title\nauthor = writer\nisbn = editions.code\nyear = editions.published\ncover = media",
+            'rows' => 12,
+            'type' => 'textarea',
+        ]);
+    }
+
+    /**
      * Render field
      *
      * Creates the HTML interface for the barcode scanner field.
@@ -157,8 +178,10 @@ class BarcodeScannerField extends \acf_field {
      * @param array<string, mixed> $field The field being rendered.
      * @return void
      */
-    public function render_field(array $field): void { ?>
-        <div class="acfbcs__field-wrapper">
+    public function render_field(array $field): void {
+        $fill_map = isset($field['fill_map']) && is_string($field['fill_map']) ? $field['fill_map'] : '';
+        ?>
+        <div class="acfbcs__field-wrapper" data-fill-map="<?php echo esc_attr($fill_map); ?>">
             <button 
                 class="field-wrapper__button button button-primary js-open-popup"
                 title="<?php esc_attr_e('Scan', 'acf-barcodescanner'); ?>"
