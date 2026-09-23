@@ -9,6 +9,7 @@ import { barcodeScanner } from './scripts/components/barcode-scanner'
 import { booksFieldsFiller } from './scripts/components/books/filler'
 import { seriesCount, seriesCountAfterScan } from './scripts/components/books/series-count'
 import { cdsFieldsFiller } from './scripts/components/cds/filler'
+import { applyFillMap, parseFillMap } from './scripts/components/common/fill-map'
 import { dvdsFieldsFiller } from './scripts/components/dvds/filler'
 import { mediasfetch } from './scripts/components/medias-fetch'
 
@@ -50,10 +51,12 @@ function setPopupStatus(message) {
  * @param {string} barcode
  * @param {string} postType
  * @param {Element} mainWrapper - `form#post`
+ * @param {string} fillMap - raw mapping from the scanner field setting
  */
-async function fetchAndFill(barcode, postType, mainWrapper) {
+async function fetchAndFill(barcode, postType, mainWrapper, fillMap) {
+	const mappings = parseFillMap(fillMap)
 	const fillFields = FIELDS_FILLERS[postType]
-	if (!fillFields) {
+	if (!mappings.length && !fillFields) {
 		return
 	}
 
@@ -66,7 +69,7 @@ async function fetchAndFill(barcode, postType, mainWrapper) {
 
 	try {
 		setPopupStatus(__('Filling in the fields…', 'acf-barcodescanner'))
-		const messages = await fillFields(mainWrapper, fetchedDatas, postType)
+		const messages = mappings.length ? await applyFillMap(mainWrapper, fetchedDatas, mappings) : await fillFields(mainWrapper, fetchedDatas, postType)
 		Swal.fire(__('Success', 'acf-barcodescanner'), messages.join('<br>'), 'success')
 	} catch (error) {
 		console.error('Error filling fields:', error)
@@ -81,6 +84,7 @@ function initField($field) {
 	}
 
 	const postType = field.dataset.name.split('_')[0]
+	const fillMap = field.querySelector('.acfbcs__field-wrapper')?.dataset.fillMap ?? ''
 	const mainWrapper = field.closest('form#post')
 
 	if (BOOKS_POST_TYPES.includes(postType)) {
@@ -133,7 +137,7 @@ function initField($field) {
           </div>`,
 			preConfirm: (barcode) => {
 				scanner?.stop()
-				return fetchAndFill(barcode, postType, mainWrapper)
+				return fetchAndFill(barcode, postType, mainWrapper, fillMap)
 			}
 		})
 	})

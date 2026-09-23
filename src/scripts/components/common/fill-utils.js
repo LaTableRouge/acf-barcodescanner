@@ -1,3 +1,5 @@
+import { __ } from '@wordpress/i18n'
+
 import { coverfetch } from '../cover-fetch'
 
 /**
@@ -67,4 +69,13 @@ export async function fillCoverIfNewPost(hasExistingTitle, coverUrl) {
 		console.error('Error fetching cover:', error)
 		return []
 	}
+}
+
+/**
+ * Success line, followed by any extra notice (cover upload, …).
+ * @param {string[]} [extra]
+ * @returns {string[]}
+ */
+export function filledMessages(extra = []) {
+	return [__('Data filled successfully', 'acf-barcodescanner'), ...extra]
 }

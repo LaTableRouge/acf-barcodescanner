@@ -20,11 +20,12 @@ Perfect for libraries, bookstores, or any WordPress site that needs to catalog i
 ## Features
 
 - 📱 **Barcode Scanner Field**: Custom ACF field type with scanner interface
+- 🗺️ **Fill mapping**: Optional textarea on the field. One line (`author = your_field`) sends a fetched key to whatever ACF `data-name` you use. Empty keeps the built-in filling
 - 📚 **Books / mangas / BDs**: BnF SRU first; Open Library only if BnF has no résumé
 - 💿 **CDs**: MusicBrainz + Cover Art Archive first; BnF fills empty fields (ISNI, résumé, …)
 - 📀 **DVDs**: BnF SRU first; TMDB search (and credits if BnF has no director) when an API key is set
 - 🖼️ **Media Library Integration**: Sideloads cover images from BnF, Open Library, Cover Art Archive, or TMDB
-- 🔢 **Released volumes (BnF)**: For ongoing books / mangas / BDs, counts the volumes in the BnF catalogue and raises `{post_type}_volumes-total`
+- 🔢 **Released volumes (BnF)**: For ongoing books / mangas / BDs, counts the volumes in the BnF catalogue
 - 🌐 **AJAX-powered**: Browser never calls third-party APIs directly
 - 🌍 **i18n Ready**: Translation-ready with text domain support
 
@@ -130,8 +131,76 @@ npm run watch
 1. Go to **Custom Fields** in your WordPress admin
 2. Create a new field group or edit an existing one
 3. Add a new field and select **Barcode scanner** as the field type
-4. Configure the field settings as needed
+4. Optionally set **Fill mapping** (see below). Leave it empty to keep the built-in filling.
 5. Save the field group
+
+### Fill mapping
+
+The scanner field has a **Fill mapping** textarea. One line links a fetched key to one of your fields:
+
+```text
+title = post_title
+author = writer
+excerpt = post_excerpt
+isbn = editions.code
+year = editions.published
+dimensions.width = size.width
+dimensions.height = size.height
+cover = media
+```
+
+The names on the right are examples. Use the `data-name` of your own ACF fields (`writer`, `editions`, `code`, …). The names on the left are fixed: they are the keys returned by the APIs.
+
+- A dot on the left reads a nested value (`dimensions.width`, `dimensions.height`).
+- `post_title` and `post_excerpt` are the WordPress title and excerpt.
+- `media` uploads the cover to the media library, only when the post title was empty.
+- A line starting with `#` is a comment.
+- Only empty fields are written. Text, number, textarea and select are filled.
+
+Leave the textarea empty to keep the built-in filling for books, CDs and DVDs.
+
+The scanner field name must still start with the catalogue prefix. That prefix chooses the APIs, not the mapping: `books_`, `mangas_`, `bds_`, `cds_` or `dvds_`.
+
+With a mapping, the released-volumes button is unchanged. It still reads `{post_type}_status`, `{post_type}_editor` and `{post_type}_volumes-total`.
+
+#### Repeater
+
+A dot on the right means “this subfield of this repeater”. Both parts are `data-name`s:
+
+```text
+isbn = editions.code
+year = editions.published
+```
+
+`editions` is the repeater. `code` and `published` are subfields inside it.
+
+One scan adds a single new row to that repeater. Every line that names the same repeater fills that same row. A second scan adds another row.
+
+Mapping the repeater name alone (`isbn = editions`) does nothing: a row needs a subfield. A repeater nested inside another row is ignored. Existing rows are left as they are.
+
+#### Series
+
+Books, mangas and BDs return two titles: `seriesTitle` (the series) and `title` (this volume), plus `volumeNumber`, `isbn` and `year`. Map them onto one repeater. Put `seriesTitle` before `title` when both target `post_title`, so the post is named after the series when the catalogue has one:
+
+```text
+seriesTitle = post_title
+title = volumes.tome
+volumeNumber = volumes.numero
+isbn = volumes.isbn
+year = volumes.annee
+```
+
+`volumes`, `tome`, `numero`, `isbn` and `annee` are your `data-name`s. Each scan appends one volume row.
+
+The mapping always writes `title` into the volume row when that key has a value. The built-in book filling, used when the textarea is empty, writes the volume title only when the series and the volume have different titles, and the post is new or already titled with the series.
+
+#### Keys you can map
+
+- Books, mangas, BDs: `title`, `author`, `editor`, `excerpt`, `isbn`, `year`, `seriesTitle`, `volumeNumber`, `dimensions.width`, `dimensions.height`, `cover`
+- CDs: `title`, `artist`, `excerpt`, `idNumber`, `isni`, `year`, `tracklist`, `dimensions.height`, `cover`
+- DVDs: `title`, `director`, `editor`, `excerpt`, `idNumber`, `year`, `cover`
+
+`tracklist` is written as one line per track. Put it on a textarea.
 
 ### Using the Scanner
 

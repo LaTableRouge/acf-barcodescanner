@@ -1,6 +1,4 @@
-import { __ } from '@wordpress/i18n'
-
-import { fillAcfTextByName, fillCoverIfNewPost, setValueIfEmpty } from '../common/fill-utils'
+import { fillAcfTextByName, fillCoverIfNewPost, filledMessages, setValueIfEmpty } from '../common/fill-utils'
 
 export const dvdsFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 	const postTitle = mainWrapper.querySelector('#title')
@@ -16,6 +14,5 @@ export const dvdsFieldsFiller = async (mainWrapper, fetchedDatas = {}) => {
 	fillAcfTextByName(mainWrapper, '_number', fetchedDatas.idNumber)
 	fillAcfTextByName(mainWrapper, '_date', fetchedDatas.year)
 
-	const coverMessage = await fillCoverIfNewPost(hasExistingTitle, fetchedDatas.cover)
-	return [__('Data filled successfully', 'acf-barcodescanner'), ...coverMessage]
+	return filledMessages(await fillCoverIfNewPost(hasExistingTitle, fetchedDatas.cover))
 }
