@@ -27,6 +27,28 @@ export function fillAcfTextByName(wrapper, nameFragment, value) {
 	setValueIfEmpty(input, value)
 }
 
+const REPEATER_ROW_DELAY_MS = 100
+
+/**
+ * Add a row to an ACF repeater and resolve with it once ACF has rendered it
+ * @param {Element} repeaterField - Repeater `.acf-field`
+ * @returns {Promise<Element|null>}
+ */
+export function appendRepeaterRow(repeaterField) {
+	const addRowButton = repeaterField.querySelector('.acf-repeater-add-row')
+	if (!addRowButton) {
+		return Promise.resolve(null)
+	}
+
+	const getRows = () => [...repeaterField.querySelectorAll('.acf-row:not(.acf-clone)')]
+	const previousRows = getRows()
+	addRowButton.click()
+
+	return new Promise((resolve) => {
+		setTimeout(() => resolve(getRows().find((row) => !previousRows.includes(row)) || null), REPEATER_ROW_DELAY_MS)
+	})
+}
+
 /**
  * Sideload a cover only when creating a new post
  * @param {boolean} hasExistingTitle

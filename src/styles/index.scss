@@ -1,10 +1,18 @@
 @charset "utf-8";
 
 .acfbcs__field-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+
   .field-wrapper__button {
     display: flex;
     gap: 5px;
     align-items: center;
+
+    &[hidden] {
+      display: none;
+    }
 
     svg {
       width: 16px;
@@ -27,6 +35,15 @@
     color: #6c6c6c;
     font-size: 0.9em;
     text-align: center;
+  }
+
+  .acfbcs__series-summary {
+    display: block;
+    margin-top: 0.75em;
+    padding-top: 0.75em;
+    border-top: 1px solid #e5e5e5;
+    color: #6c6c6c;
+    font-size: 0.9em;
   }
 
   .scanner__video-wrapper {

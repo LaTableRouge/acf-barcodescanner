@@ -330,6 +330,15 @@ export class XMLUtils {
 	}
 
 	/**
+	 * Publisher from 214$c (publication), else 210$c (older records)
+	 * @param {NodeList|Array} datafields
+	 * @returns {string}
+	 */
+	static extractPublisher(datafields) {
+		return this.getSubfieldText(datafields, '214', 'c') || this.getSubfieldText(datafields, '210', 'c')
+	}
+
+	/**
 	 * Extract year from CreationDate in extraRecordData (cataloging date)
 	 * Handles various date formats and errors gracefully
 	 * @param {Element|null} extraRecordData - The extraRecordData element
@@ -409,7 +418,6 @@ export class XMLUtils {
 	 * Format a person's name from first name and surname
 	 * @param {string} firstName - First name
 	 * @param {string} surname - Surname
-	 * @param {string} dates - Optional dates to append
 	 * @returns {string} Formatted name
 	 */
 	static formatPersonName(firstName, surname) {
@@ -429,10 +437,9 @@ export class XMLUtils {
 	 * Checks fields 700, 701, 702 (personal names) and 710, 711, 712 (corporate names)
 	 * Falls back to 200$f (statement of responsibility) if no author fields found
 	 * @param {NodeList|Array} datafields - Collection of datafield elements
-	 * @param {boolean} includeFallback - Whether to include fallback to 200$f (default: true)
 	 * @returns {string} Author names joined with commas, or empty string
 	 */
-	static extractAuthor(datafields, includeFallback = true) {
+	static extractAuthor(datafields) {
 		const names = []
 		const seen = new Set()
 
@@ -470,7 +477,7 @@ export class XMLUtils {
 			}
 		}
 
-		if (names.length === 0 && includeFallback) {
+		if (names.length === 0) {
 			const statement = this.getSubfieldText(datafields, '200', 'f')
 			if (statement) {
 				addName(statement.replace(/^(\[.*?\]|par|de|par\s+)\s*/i, ''))

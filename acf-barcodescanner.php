@@ -4,7 +4,7 @@
 Plugin Name: Advanced Custom Fields: Barcode scanner
 Plugin URI: https://github.com/LaTableRouge/acf-barcodescanner
 Description: Add Barcode scanner
-Version: 1.3.0
+Version: 2.0.0
 Author: Author: LaTableRouge
 Author URI: https://mlnop.fr
 License: GPLv2 or later
@@ -17,6 +17,10 @@ namespace ACFBarcodeScanner;
 if (!defined('ABSPATH')) {
     exit;
 }
+
+const VERSION = '2.0.0';
+const NONCE_ACTION = 'acfbcs';
+const USER_AGENT = 'acf-barcodescanner/' . VERSION . ' (https://github.com/LaTableRouge/acf-barcodescanner)';
 
 /**
  * Main plugin class for ACF Barcode Scanner
@@ -40,7 +44,7 @@ class Plugin {
         // settings
         // - these will be passed into the field class.
         $this->settings = [
-            'version' => '1.3.0',
+            'version' => VERSION,
             'url' => plugin_dir_url(__FILE__),
             'path' => plugin_dir_path(__FILE__),
             'lang_path' => plugin_dir_path(__FILE__) . 'lang',
@@ -64,7 +68,8 @@ class Plugin {
         load_plugin_textdomain('acf-barcodescanner', false, plugin_basename(dirname(__FILE__)) . '/lang');
 
         // include
-        include_once 'fields/class-my-acf-field-barcodescanner.php';
+        include_once __DIR__ . '/includes/bnf-series.php';
+        include_once __DIR__ . '/fields/class-my-acf-field-barcodescanner.php';
 
         // Initialize the field
         if (class_exists(__NAMESPACE__ . '\Fields\BarcodeScannerField')) {

@@ -9,9 +9,9 @@
 		}
 	],
 	"require-dev": {
-		"friendsofphp/php-cs-fixer": "3.95.20",
-		"phpstan/phpstan": "^2.2.8",
-		"szepeviktor/phpstan-wordpress": "2.0.3",
+		"friendsofphp/php-cs-fixer": "3.95.27",
+		"phpstan/phpstan": "^2.2.14",
+		"szepeviktor/phpstan-wordpress": "2.0.4",
 		"squizlabs/php_codesniffer": "^4.0.4"
 	},
 	"scripts": {

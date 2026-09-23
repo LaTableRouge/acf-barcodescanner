@@ -1,4 +1,5 @@
-import { __ } from '@wordpress/i18n'
+import { __, sprintf } from '@wordpress/i18n'
+
 /**
  * Barcode Scanner Component
  *
@@ -22,6 +23,7 @@ export class BarcodeScanner {
 		this.localStream = null
 		this.interval = null
 		this.lastDetectedBarcode = null
+		this.lastDetectionTime = 0
 		this.detectionCooldown = 1000 // Prevent multiple detections within 1 second
 
 		// Cache DOM elements
@@ -83,14 +85,14 @@ export class BarcodeScanner {
 			}
 		}
 
-		if (barcodeDetectorUsable === true) {
-			this.isBarcodeDetectorAvailable = true
-			this.barcodeDetector = new window.BarcodeDetector()
-		} else {
+		if (!barcodeDetectorUsable) {
 			alert(__('Barcode Detector is not supported by this browser. You can try to type the barcode manually.', 'acf-barcodescanner'))
 			this.startButton.style.display = 'none'
 			return
 		}
+
+		this.isBarcodeDetectorAvailable = true
+		this.barcodeDetector = new window.BarcodeDetector()
 	}
 
 	/**
@@ -115,7 +117,8 @@ export class BarcodeScanner {
 
 					if (device.kind === 'videoinput') {
 						cameraDevices.push(device)
-						const label = device.label || `Camera ${count++}`
+						/* translators: %d: camera index */
+						const label = device.label || sprintf(__('Camera %d', 'acf-barcodescanner'), count++)
 						this.cameraSelect.add(new Option(label, device.deviceId))
 
 						// Prefer back camera if available
@@ -129,7 +132,7 @@ export class BarcodeScanner {
 					this.cameraSelect.selectedIndex = defaultIndex
 					this.play(cameraDevices[defaultIndex].deviceId)
 				} else {
-					alert('No camera detected.')
+					alert(__('No camera detected.', 'acf-barcodescanner'))
 				}
 			})
 		})
@@ -142,15 +145,10 @@ export class BarcodeScanner {
 	play(deviceId) {
 		this.stop()
 
-		const constraints = deviceId
-			? {
-					video: { deviceId: deviceId },
-					audio: false
-				}
-			: {
-					video: true,
-					audio: false
-				}
+		const constraints = {
+			audio: false,
+			video: deviceId ? { deviceId } : true
+		}
 
 		navigator.mediaDevices
 			.getUserMedia(constraints)
@@ -276,16 +274,12 @@ export class BarcodeScanner {
 				this.svg.append(polygon)
 				this.svg.append(text)
 
-				// In debug mode, add click handler to manually fill the field
-				// (doesn't stop scanning, allowing multiple scans)
+				// In debug mode, fill the field on click only, allowing multiple scans
 				polygon.addEventListener('click', () => {
-					this.fillBarcodeValue(barcode.rawValue) // false = don't stop scanning
+					this.fillBarcodeValue(barcode.rawValue)
 				})
-			}
-
-			// Auto-fill the input field and stop scanning (unless in debug mode)
-			if (!this.debug) {
-				this.autoFillBarcode(barcode.rawValue)
+			} else {
+				this.fillBarcodeValue(barcode.rawValue)
 			}
 		}
 	}
@@ -293,7 +287,6 @@ export class BarcodeScanner {
 	/**
 	 * Fill the barcode value in the input field
 	 * @param {string} barcodeValue - The detected barcode value
-	 * @param {boolean} stopScanning - Whether to stop the camera stream after filling. Default: true
 	 */
 	fillBarcodeValue(barcodeValue) {
 		// Update cooldown tracking
@@ -309,14 +302,6 @@ export class BarcodeScanner {
 	}
 
 	/**
-	 * Automatically fill the barcode value in the input field and stop scanning
-	 * @param {string} barcodeValue - The detected barcode value
-	 */
-	autoFillBarcode(barcodeValue) {
-		this.fillBarcodeValue(barcodeValue)
-	}
-
-	/**
 	 * Convert corner points object to SVG points string
 	 * @param {Object} points - Object containing x1, x2, x3, x4, y1, y2, y3, y4
 	 * @returns {string} SVG points string
@@ -327,7 +312,7 @@ export class BarcodeScanner {
 }
 
 /**
- * Factory function for backward compatibility
+ * Create a scanner bound to the popup wrapper
  * @param {HTMLElement} wrapper - The wrapper element containing the scanner UI
  * @param {Object} options - Configuration options
  * @param {boolean} options.debug - Enable debug mode (shows polygons, SVG text, and click options). Default: false

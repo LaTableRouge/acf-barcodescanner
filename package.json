@@ -1,6 +1,6 @@
 {
 	"name": "acf-barcode-scanner",
-	"version": "1.3.0",
+	"version": "2.0.0",
 	"description": "A plugin add a barcode scanner to acf",
 	"main": "index.js",
 	"keywords": [
@@ -27,20 +27,21 @@
 		"lint:md": "npx markdownlint-cli2 --config linters/.markdownlint.json --fix */**/*.md !**/node_modules/** !**/vendor/**",
 		"lint:php": "composer run lint:php",
 		"prettier:php": "composer run prettier:php",
-		"beautify:all": "npm run prettier:scss && npm run lint:scss && npm run prettier:js && npm run lint:js && npm run lint:md && npm run prettier:json && npm run lint:md && npm run prettier:php && npm run lint:php"
+		"beautify:all": "npm run prettier:scss && npm run lint:scss && npm run prettier:js && npm run lint:js && npm run lint:md && npm run prettier:json && npm run lint:md && npm run prettier:php && npm run lint:php",
+		"prepare": "husky"
 	},
 	"devDependencies": {
 		"validate-branch-name": "^1.3.2",
 		"husky": "^9.1.7",
-		"lint-staged": "^17.3.0",
+		"lint-staged": "^17.5.1",
 		"git-precommit-checks": "^3.1.0",
-		"@commitlint/cli": "^21.2.2",
-		"@commitlint/config-conventional": "^21.2.2",
+		"@commitlint/cli": "^21.2.3",
+		"@commitlint/config-conventional": "^21.2.3",
 		"eruda": "^3.4.3",
-		"@babel/runtime": "^8.0.0",
-		"@wordpress/scripts": "^34.1.0",
-		"autoprefixer": "^10.5.4",
-		"browserslist": "^4.28.8",
+		"@babel/runtime": "^8.0.5",
+		"@wordpress/scripts": "^35.0.0",
+		"autoprefixer": "^10.6.1",
+		"browserslist": "^4.29.0",
 		"eslint": "^9.39.5",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-import": "^2.32.0",
@@ -53,19 +54,19 @@
 		"eslint-plugin-sort-destructure-keys": "^3.0.0",
 		"eslint-plugin-unused-imports": "^4.4.1",
 		"eslint-plugin-yml": "^3.8.1",
-		"globals": "^17.11.0",
-		"markdownlint-cli2": "^0.23.2",
-		"prettier": "^3.9.6",
-		"sass": "^1.103.0",
-		"sass-loader": "^17.0.0",
-		"stylelint": "^17.14.1",
+		"globals": "^17.12.0",
+		"markdownlint-cli2": "^0.23.3",
+		"prettier": "^3.9.9",
+		"sass": "^1.105.0",
+		"sass-loader": "^17.0.1",
+		"stylelint": "^17.15.0",
 		"stylelint-config-property-sort-order-smacss": "^11.2.0",
 		"stylelint-config-sass-guidelines": "^13.0.0",
 		"stylelint-config-standard": "^40.0.0",
 		"stylelint-order": "^8.1.1"
 	},
 	"dependencies": {
-		"sweetalert2": "^11.26.3"
+		"sweetalert2": "^11.26.25"
 	},
 	"files": [],
 	"lint-staged": {
