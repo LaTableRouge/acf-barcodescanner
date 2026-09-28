@@ -4,7 +4,7 @@
 Plugin Name: Advanced Custom Fields: Barcode scanner
 Plugin URI: https://github.com/LaTableRouge/acf-barcodescanner
 Description: Add Barcode scanner
-Version: 2.1.0
+Version: 2.1.1
 Author: Author: LaTableRouge
 Author URI: https://mlnop.fr
 License: GPLv2 or later
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-const VERSION = '2.1.0';
+const VERSION = '2.1.1';
 const NONCE_ACTION = 'acfbcs';
 const USER_AGENT = 'acf-barcodescanner/' . VERSION . ' (https://github.com/LaTableRouge/acf-barcodescanner)';
 
