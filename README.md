@@ -220,6 +220,26 @@ On `books`, `mangas` and `bds`, a **Check released volumes (BnF)** button appear
 - Volume numbers come from UNIMARC `461`, then `225`, then `200`, with an exact match on the normalized series title. Hors-séries and decimal numbers are ignored.
 - The highest volume number found is written into `{post_type}_volumes-total` only when it is greater than the current value. Nothing is saved until you update the post.
 
+### Weekly volume sync (WP-Cron)
+
+Once a week, the plugin can refresh `{post_type}_volumes-total` for every **published** series whose `{post_type}_status` is `ongoing` (`books`, `mangas`, `bds` by default).
+It uses the same BnF logic as the button: post title, `{post_type}_editor`, raise the total only when BnF reports a higher max.
+
+- Enabled by default after install or upgrade. Disable with `add_filter( 'acfbcs_volume_cron_enabled', '__return_false' );`
+- Work is queued and processed in batches (default 5 series per batch, 2 minutes apart) to avoid PHP timeouts and hammering the BnF API.
+- Failures are stored on the post as `acfbcs_last_volume_sync` (timestamp) and `acfbcs_last_volume_sync_error` (message). Successful runs clear the error meta.
+- Re-activation schedules the weekly event if missing. Deactivation clears the cron hooks and the queue.
+- For reliable timing on low-traffic sites, point the server cron at `wp cron event run --due-now` or `wp-cron.php` instead of relying on visits alone.
+- Manual run: `wp cron event run acfbcs_weekly_series_volumes`
+
+Filters:
+
+- `acfbcs_volume_cron_enabled` (bool, default `true`)
+- `acfbcs_volume_cron_post_types` (list of post type slugs)
+- `acfbcs_volume_cron_ongoing_status` (string, default `ongoing`)
+- `acfbcs_volume_cron_batch_size` (int, default `5`)
+- `acfbcs_volume_cron_batch_delay_seconds` (int, default `120`)
+
 ### AJAX Endpoints
 
 The plugin provides three AJAX endpoints. All of them require the `acfbcs` nonce and the `edit_posts` capability:
@@ -237,7 +257,8 @@ acf-barcodescanner/
 ├── fields/
 │   └── class-my-acf-field-barcodescanner.php  # Main field class
 ├── includes/
-│   └── bnf-series.php                         # BnF released volumes count (AJAX)
+│   ├── bnf-series.php                         # BnF released volumes count (AJAX)
+│   └── bnf-series-cron.php                    # Weekly volumes-total sync (WP-Cron)
 ├── src/
 │   ├── scripts/                               # JavaScript source files
 │   │   └── components/providers/              # BnF, Open Library, MusicBrainz, TMDB
