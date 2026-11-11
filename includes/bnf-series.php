@@ -25,8 +25,13 @@ if (!defined('ABSPATH')) {
 
 const SRU_ENDPOINT = 'https://catalogue.bnf.fr/api/SRU';
 const AJAX_ACTION = 'acfbcs_count_series_volumes';
-const PAGE_SIZE = 1000;
-const MAX_PAGES = 3;
+const PAGE_SIZE = 100;
+const MAX_PAGES = 12;
+
+/** @var list<string> */
+const SERIES_POST_TYPES = ['books', 'mangas', 'bds'];
+
+const SERIES_ONGOING_STATUS = 'ongoing';
 
 /**
  * Series title / volume number pairs, by priority: linked series (461), series statement (225), title proper (200).
@@ -79,18 +84,23 @@ function build_query(string $title, string $publisher): string {
  */
 function fetch_page(string $query, int $start_record): string|WP_Error {
     $url = add_query_arg(
-        array_map('rawurlencode', [
+        [
             'version' => '1.2',
             'operation' => 'searchRetrieve',
             'query' => $query,
-            'recordSchema' => 'unimarcxchange',
+            'recordSchema' => 'unimarcXchange',
             'maximumRecords' => (string) PAGE_SIZE,
             'startRecord' => (string) $start_record,
-        ]),
+        ],
         SRU_ENDPOINT
     );
 
-    $response = wp_remote_get($url, ['timeout' => 30, 'user-agent' => USER_AGENT]);
+    $response = wp_safe_remote_get($url, [
+        'headers' => ['Accept' => 'application/xml, text/xml, */*'],
+        'redirection' => 3,
+        'timeout' => 25,
+        'user-agent' => USER_AGENT,
+    ]);
     if (is_wp_error($response)) {
         return $response;
     }
@@ -147,6 +157,7 @@ function parse_page(string $xml, string $series): array|WP_Error {
 
     $xpath = new DOMXPath($document);
     $xpath->registerNamespace('srw', 'http://www.loc.gov/zing/srw/');
+    $xpath->registerNamespace('sd', 'http://www.loc.gov/zing/srw/diagnostic/');
     $xpath->registerNamespace('mxc', 'info:lc/xmlns/marcxchange-v2');
 
     $numbers = [];
@@ -166,10 +177,17 @@ function parse_page(string $xml, string $series): array|WP_Error {
         }
     }
 
+    $diagnostic = trim((string) $xpath->evaluate('string(//sd:message)'));
+    if ($records->length === 0 && $diagnostic !== '') {
+        return new WP_Error('bnf_diagnostic', $diagnostic);
+    }
+
+    $next_raw = trim((string) $xpath->evaluate('string(//srw:nextRecordPosition)'));
+
     return [
         // BnF answers HTTP 500 when startRecord goes past the last record, so only follow its own pointer
-        'next_record' => (int) $xpath->evaluate('number(//srw:nextRecordPosition)'),
-        'records' => (int) $xpath->evaluate('count(//srw:record)'),
+        'next_record' => ctype_digit($next_raw) ? (int) $next_raw : 0,
+        'records' => $records->length,
         'numbers' => $numbers,
     ];
 }
@@ -192,6 +210,40 @@ function parse_publishers(string $value): array {
     }
 
     return $publishers ? array_values($publishers) : [''];
+}
+
+/**
+ * Same imprint aliases as the barcode UI (`acfbcs_publisher_aliases` filter).
+ */
+function resolve_publisher_aliases(string $publishers_value): string {
+    $aliases = apply_filters('acfbcs_publisher_aliases', []);
+    if (!is_array($aliases) || $publishers_value === '') {
+        return $publishers_value;
+    }
+
+    $resolved = [];
+    foreach (explode(',', $publishers_value) as $publisher) {
+        $publisher = trim($publisher);
+        if ($publisher === '') {
+            continue;
+        }
+
+        $needle = strtolower($publisher);
+        $match = $publisher;
+        foreach ($aliases as $name => $alias) {
+            if (!is_string($name) || !is_string($alias)) {
+                continue;
+            }
+            if (strtolower(trim($name)) === $needle) {
+                $match = trim($alias);
+                break;
+            }
+        }
+
+        $resolved[] = $match;
+    }
+
+    return implode(', ', $resolved);
 }
 
 /**
@@ -288,7 +340,9 @@ function ajax_count_series_volumes(): void {
     }
 
     $title = isset($_POST['title']) && is_string($_POST['title']) ? trim(sanitize_text_field(wp_unslash($_POST['title']))) : '';
-    $publisher = isset($_POST['publisher']) && is_string($_POST['publisher']) ? sanitize_text_field(wp_unslash($_POST['publisher'])) : '';
+    $publisher = isset($_POST['publisher']) && is_string($_POST['publisher'])
+        ? resolve_publisher_aliases(sanitize_text_field(wp_unslash($_POST['publisher'])))
+        : '';
 
     if ($title === '') {
         wp_send_json_error(['message' => __('The post has no title.', 'acf-barcodescanner')], 400);
